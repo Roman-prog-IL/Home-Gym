@@ -3,23 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Gym System Pro</title>
+    <title>Gym All-In-One</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --bg: #05070a; --card: #111827; --accent: #3b82f6; --success: #10b981; --warning: #f59e0b; --text-dim: #6b7280; }
-        body { background: var(--bg); color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 20px 20px 140px; line-height: 1.4; }
+        :root { --bg: #05070a; --card: #111827; --accent: #3b82f6; --success: #10b981; --text-dim: #6b7280; }
+        body { background: var(--bg); color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 20px 20px 140px; }
         
         .schedule-banner { background: linear-gradient(90deg, #1e293b, #0f172a); border-radius: 20px; padding: 15px; margin-bottom: 20px; border-left: 5px solid var(--accent); }
-        .schedule-day { font-size: 11px; color: var(--accent); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .schedule-day { font-size: 11px; color: var(--accent); font-weight: 800; text-transform: uppercase; }
         .schedule-task { font-size: 18px; font-weight: bold; margin-top: 4px; }
 
         .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 20px; background: var(--card); padding: 15px; border-radius: 20px; }
         .day { text-align: center; cursor: pointer; opacity: 0.4; }
         .day.active { opacity: 1; }
         .day-box { height: 35px; border-radius: 10px; background: #1f2937; display: flex; align-items: center; justify-content: center; font-size: 13px; margin-top: 5px; font-weight: bold; }
-        .day.active .day-box { background: var(--accent); box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
+        .day.active .day-box { background: var(--accent); }
 
-        .ex-card { background: var(--card); border-radius: 24px; padding: 18px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); position: relative; transition: 0.3s; }
+        .ex-card { background: var(--card); border-radius: 24px; padding: 18px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); position: relative; opacity: 1 !important; }
         .category-title { color: var(--accent); font-size: 10px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; }
         
         .type-selector { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 5px; scrollbar-width: none; }
@@ -28,7 +28,7 @@
 
         .ex-header { display: flex; justify-content: space-between; align-items: center; }
         .input-group { display: flex; gap: 8px; }
-        input { background: #1f2937; border: 1px solid #374151; color: white; width: 50px; padding: 10px; border-radius: 12px; text-align: center; font-size: 16px; -webkit-appearance: none; }
+        input { background: #1f2937; border: 1px solid #374151; color: white; width: 50px; padding: 10px; border-radius: 12px; text-align: center; font-size: 16px; }
         .add-btn { background: var(--accent); border: none; color: white; width: 44px; height: 44px; border-radius: 12px; font-weight: bold; font-size: 20px; }
 
         .history-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; min-height: 20px; }
@@ -84,18 +84,18 @@
     ];
 
     const weeklyPlan = {
-        0: { title: "Силовая А (Верх)", targets: ['dip_Классика', 'pull_Широкий', 'push_Алмазные'], color: "#3b82f6" },
-        1: { title: "Активный отдых", targets: [], color: "#10b981" },
-        2: { title: "Силовая Б (Тяга)", targets: ['pull_Узкий (Бицепс)', 'abs_Колесо', 'push_Домиком'], color: "#3b82f6" },
-        3: { title: "Полный отдых", targets: [], color: "#6b7280" },
-        4: { title: "Силовая С (Интенсив)", targets: ['pull_Параллельный', 'dip_Классика', 'abs_Подъем ног'], color: "#3b82f6" },
-        5: { title: "Кардио", targets: ['push_Классика'], color: "#10b981" },
-        6: { title: "Шаббат", targets: [], color: "#f59e0b" }
+        0: { title: "Силовая А", color: "#3b82f6" },
+        1: { title: "Активный отдых", color: "#10b981" },
+        2: { title: "Силовая Б", color: "#3b82f6" },
+        3: { title: "Полный отдых", color: "#6b7280" },
+        4: { title: "Силовая С", color: "#3b82f6" },
+        5: { title: "Кардио", color: "#10b981" },
+        6: { title: "Шаббат", color: "#f59e0b" }
     };
 
-    let db = JSON.parse(localStorage.getItem('gym_v9_db')) || {};
-    let weights = JSON.parse(localStorage.getItem('gym_v9_weights')) || {};
-    let selectedTypes = JSON.parse(localStorage.getItem('gym_v9_selected')) || { dip: 'Классика', pull: 'Широкий', push: 'Классика', abs: 'Колесо' };
+    let db = JSON.parse(localStorage.getItem('gym_v10_db')) || {};
+    let weights = JSON.parse(localStorage.getItem('gym_v10_weights')) || {};
+    let selectedTypes = JSON.parse(localStorage.getItem('gym_v10_selected')) || { dip: 'Классика', pull: 'Широкий', push: 'Классика', abs: 'Колесо' };
     let today = new Date().toISOString().split('T')[0];
     let viewingDate = today;
     let chartInstance;
@@ -131,19 +131,13 @@
 
     function renderExercises() {
         const list = document.getElementById('exercise-list');
-        const d = new Date(viewingDate).getDay();
-        const targets = weeklyPlan[d].targets;
-
         list.innerHTML = program.map(ex => {
             const currentType = selectedTypes[ex.id];
             const storageKey = `${ex.id}_${currentType}`;
             const sets = (db[viewingDate] && db[viewingDate][storageKey]) || [];
-            
-            const isTarget = targets.includes(storageKey);
-            const opacity = (targets.length > 0 && !isTarget) ? '0.3' : '1';
             const isDone = sets.length >= 4;
 
-            return `<div class="ex-card" style="opacity: ${opacity}; border: ${isDone ? '2px solid var(--success)' : '1px solid rgba(255,255,255,0.05)'}">
+            return `<div class="ex-card" style="border: ${isDone ? '2px solid var(--success)' : '1px solid rgba(255,255,255,0.05)'}">
                 ${isDone ? '<div style="position:absolute; top:10px; right:15px; color:var(--success); font-size:10px; font-weight:bold;">✅ ГОТОВО</div>' : ''}
                 <div class="category-title">${ex.name}</div>
                 <div class="type-selector">${ex.types.map(t => `<button class="type-btn ${t === currentType ? 'active' : ''}" onclick="setType('${ex.id}', '${t}')">${t}</button>`).join('')}</div>
@@ -158,28 +152,23 @@
 
     function setType(exId, type) {
         selectedTypes[exId] = type;
-        localStorage.setItem('gym_v9_selected', JSON.stringify(selectedTypes));
+        localStorage.setItem('gym_v10_selected', JSON.stringify(selectedTypes));
         renderExercises();
         updateChart();
     }
 
     function addSet(exId) {
         const inp = document.getElementById(`in-${exId}`);
-        const val = parseInt(inp.value);
-        if(!val) return;
+        const val = parseInt(inp.value); if(!val) return;
         const storageKey = `${exId}_${selectedTypes[exId]}`;
-        if(!db[today]) db[today] = {};
-        if(!db[today][storageKey]) db[today][storageKey] = [];
-        db[today][storageKey].push(val);
-        localStorage.setItem('gym_v9_db', JSON.stringify(db));
+        if(!db[today]) db[today] = {}; if(!db[today][storageKey]) db[today][storageKey] = [];
+        db[today][storageKey].push(val); localStorage.setItem('gym_v10_db', JSON.stringify(db));
         inp.value = ''; renderExercises(); updateChart(); startTimer();
     }
 
     function saveWeight() {
-        const val = document.getElementById('w-in').value;
-        if(!val) return;
-        weights[today] = parseFloat(val);
-        localStorage.setItem('gym_v9_weights', JSON.stringify(weights));
+        const val = document.getElementById('w-in').value; if(!val) return;
+        weights[today] = parseFloat(val); localStorage.setItem('gym_v10_weights', JSON.stringify(weights));
         updateWeightDisplay(); updateChart(); document.getElementById('w-in').value = '';
     }
 
@@ -194,14 +183,12 @@
     function updateChart() {
         const ctx = document.getElementById('mainChart').getContext('2d');
         const last7 = []; for(let i=6; i>=0; i--) { let d=new Date(); d.setDate(d.getDate()-i); last7.push(d.toISOString().split('T')[0]); }
-        
         let data = last7.map(date => {
             if(currentChartSource === 'Weight') return weights[date] || null;
             const key = `${currentChartSource}_${selectedTypes[currentChartSource]}`;
             const dayData = (db[date] && db[date][key]) || [];
             return dayData.length > 0 ? Math.max(...dayData) : 0;
         });
-
         if (chartInstance) chartInstance.destroy();
         chartInstance = new Chart(ctx, {
             type: 'line',
@@ -218,7 +205,6 @@
         let l = 60; bar.style.display = 'block'; val.innerText = l;
         tId = setInterval(() => { l--; val.innerText = l; if(l<=0) { clearInterval(tId); bar.style.display='none'; } }, 1000);
     }
-
     init();
 </script>
 </body>
