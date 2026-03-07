@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Home Gym</title>
+    <style>
+        body { background: #0f172a; color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 400px; }
+        .status { color: #22c55e; font-size: 12px; font-weight: bold; margin-bottom: 10px; display: block; }
+        h1 { font-size: 32px; margin: 0; color: #3b82f6; }
+        .date { color: #94a3b8; font-size: 14px; margin-bottom: 25px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .card { background: #1e293b; padding: 20px; border-radius: 20px; border-left: 6px solid; }
+        .blue { border-color: #3b82f6; } .orange { border-color: #f97316; }
+        .val { font-size: 32px; font-weight: bold; display: block; }
+        .lab { font-size: 11px; color: #94a3b8; font-weight: bold; text-transform: uppercase; }
+        .water-box { background: #1e293b; padding: 20px; border-radius: 20px; margin-top: 25px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #334155; }
+        button { background: #334155; color: #3b82f6; border: none; padding: 12px 18px; border-radius: 12px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <span class="status">● СИСТЕМА АКТИВНА</span>
+        <h1 id="day-name">Загрузка...</h1>
+        <div class="date" id="full-date">...</div>
+
+        <div class="grid">
+            <div class="card blue"><span class="val">0</span><span class="lab">БРУСЬЯ</span></div>
+            <div class="card orange"><span class="val">0</span><span class="lab">ТУРНИК</span></div>
+        </div>
+
+        <div class="water-box">
+            <span>💧 ВОДА: <strong id="w">0.0</strong>л</span>
+            <button onclick="addW(0.1)">+0.1</button>
+        </div>
+    </div>
+
+    <script>
+        function addW(v) {
+            let e = document.getElementById('w');
+            e.innerText = (parseFloat(e.innerText) + v).toFixed(1);
+        }
+        const d = new Date();
+        const days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+        const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+        document.getElementById('day-name').innerText = days[d.getDay()];
+        document.getElementById('full-date').innerText = d.getDate() + ' ' + months[d.getMonth()];
+    </script>
+</body>
+</html>
