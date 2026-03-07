@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gym OS</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1 id="day-name">Воскресенье</h1>
+            <p id="full-date">8 марта 2026 г.</p>
+        </header>
+
+        <div class="grid">
+            <div class="card blue">
+                <span class="val">0</span>
+                <span class="lab">БРУСЬЯ</span>
+            </div>
+            <div class="card orange">
+                <span class="val">0</span>
+                <span class="lab">ТУРНИК</span>
+            </div>
+            <div class="card yellow">
+                <span class="val">0.0</span>
+                <span class="lab">ДОРОЖКА (КМ)</span>
+            </div>
+            <div class="card green">
+                <span class="val">0</span>
+                <span class="lab">ПРИСЕДЫ</span>
+            </div>
+        </div>
+
+        <div class="actions">
+             <div class="btn-box">
+                <span>ВОДА</span>
+                <button>+0.1</button>
+                <button>+0.3</button>
+             </div>
+        </div>
+    </div>
+</body>
+</html>
