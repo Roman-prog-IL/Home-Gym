@@ -3,43 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Gym Analytics Final</title>
+    <title>Gym System Pro</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --bg: #05070a; --card: #111827; --accent: #3b82f6; --success: #10b981; --text-dim: #6b7280; }
-        body { background: var(--bg); color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 20px 20px 140px; line-height: 1.4; }
+        :root { --bg: #05070a; --card: #111827; --accent: #3b82f6; --success: #10b981; --warning: #f59e0b; --text-dim: #6b7280; }
+        body { background: var(--bg); color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 20px 20px 140px; }
         
+        /* Блок расписания */
+        .schedule-banner { background: linear-gradient(90deg, #1e293b, #0f172a); border-radius: 20px; padding: 15px; margin-bottom: 20px; border-left: 5px solid var(--accent); }
+        .schedule-day { font-size: 12px; color: var(--accent); font-weight: 800; text-transform: uppercase; }
+        .schedule-task { font-size: 18px; font-weight: bold; margin-top: 4px; }
+
         .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 20px; background: var(--card); padding: 15px; border-radius: 20px; }
-        .day { text-align: center; cursor: pointer; opacity: 0.4; transition: 0.3s; }
+        .day { text-align: center; cursor: pointer; opacity: 0.4; }
         .day.active { opacity: 1; }
-        .day-box { height: 35px; border-radius: 10px; background: #1f2937; display: flex; align-items: center; justify-content: center; font-size: 13px; margin-top: 5px; font-weight: bold; }
+        .day-box { height: 35px; border-radius: 10px; background: #1f2937; display: flex; align-items: center; justify-content: center; font-size: 13px; margin-top: 5px; }
         .day.active .day-box { background: var(--accent); box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
 
-        .ex-card { background: var(--card); border-radius: 24px; padding: 18px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); }
-        .category-title { color: var(--accent); font-size: 10px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px; }
+        .ex-card { background: var(--card); border-radius: 24px; padding: 18px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); position: relative; }
+        .category-title { color: var(--accent); font-size: 10px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; }
         
         .type-selector { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 5px; scrollbar-width: none; }
-        .type-btn { background: #1f2937; border: 1px solid #374151; color: var(--text-dim); padding: 6px 12px; border-radius: 8px; font-size: 11px; white-space: nowrap; font-weight: 600; border: none; }
+        .type-btn { background: #1f2937; border: none; color: var(--text-dim); padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 600; }
         .type-btn.active { background: var(--accent); color: white; }
 
         .ex-header { display: flex; justify-content: space-between; align-items: center; }
         .input-group { display: flex; gap: 8px; }
-        input { background: #1f2937; border: 1px solid #374151; color: white; width: 50px; padding: 10px; border-radius: 12px; text-align: center; font-size: 16px; outline: none; }
+        input { background: #1f2937; border: 1px solid #374151; color: white; width: 50px; padding: 10px; border-radius: 12px; text-align: center; font-size: 16px; }
         .add-btn { background: var(--accent); border: none; color: white; width: 44px; height: 44px; border-radius: 12px; font-weight: bold; font-size: 20px; }
 
-        .history-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; min-height: 20px; }
+        .history-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
         .pill { background: rgba(59, 130, 246, 0.1); color: var(--accent); padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; border: 1px solid rgba(59, 130, 246, 0.2); }
 
-        /* Аналитика */
         .analytics-box { background: var(--card); border-radius: 24px; padding: 20px; margin-top: 25px; border: 1px solid rgba(255,255,255,0.1); }
-        .chart-menu { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 15px; scrollbar-width: none; padding-bottom: 5px; }
-        .menu-btn { background: #1f2937; border: none; color: var(--text-dim); padding: 8px 14px; border-radius: 10px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+        .chart-menu { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 15px; scrollbar-width: none; }
+        .menu-btn { background: #1f2937; border: none; color: var(--text-dim); padding: 8px 14px; border-radius: 10px; font-size: 11px; font-weight: 700; }
         .menu-btn.active { background: var(--accent); color: white; }
 
         #timer { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--accent); padding: 15px 35px; border-radius: 50px; display: none; font-weight: 800; z-index: 1000; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
     </style>
 </head>
 <body>
+
+<div class="schedule-banner" id="today-plan">
+    <div class="schedule-day" id="plan-weekday">Загрузка...</div>
+    <div class="schedule-task" id="plan-title">Определяем план...</div>
+</div>
 
 <div class="week-grid" id="calendar"></div>
 
@@ -56,14 +65,12 @@
 <div id="exercise-list"></div>
 
 <div class="analytics-box">
-    <div class="chart-menu" id="chart-nav">
+    <div class="chart-menu">
         <button class="menu-btn active" onclick="setChartSource('Weight')">Вес</button>
         <button class="menu-btn" onclick="setChartSource('dip')">Брусья</button>
         <button class="menu-btn" onclick="setChartSource('pull')">Турник</button>
         <button class="menu-btn" onclick="setChartSource('push')">Отжимания</button>
-        <button class="menu-btn" onclick="setChartSource('abs')">Пресс</button>
     </div>
-    <h3 id="chart-label" style="margin: 0 0 10px 0; font-size: 12px; color: var(--accent); text-transform: uppercase;">Прогресс: Вес</h3>
     <canvas id="mainChart" height="180"></canvas>
 </div>
 
@@ -77,19 +84,39 @@
         { id: 'abs', name: 'Пресс', types: ['Колесо', 'Подъем ног'] }
     ];
 
-    let db = JSON.parse(localStorage.getItem('gym_v7_db')) || {};
-    let weights = JSON.parse(localStorage.getItem('gym_v7_weights')) || {};
-    let selectedTypes = JSON.parse(localStorage.getItem('gym_v7_selected')) || { dip: 'Классика', pull: 'Широкий', push: 'Классика', abs: 'Колесо' };
+    const weeklyPlan = {
+        0: { title: "Силовая А (Верх)", desc: "Брусья + Широкий Турник", color: "#3b82f6" }, // Вс
+        1: { title: "Активный отдых", desc: "Дорожка 20 мин + Растяжка", color: "#10b981" }, // Пн
+        2: { title: "Силовая Б (Тяга)", desc: "Бицепс Турник + Пресс", color: "#3b82f6" },   // Вт
+        3: { title: "Полный отдых", desc: "Восстановление и сон", color: "#6b7280" },        // Ср
+        4: { title: "Силовая С (Интенсив)", desc: "Параллельный + Плечи", color: "#3b82f6" },// Чт
+        5: { title: "Кардио День", desc: "Дорожка + Отжимания MAX", color: "#10b981" },     // Пт
+        6: { title: "Шаббат (Отдых)", desc: "Перерыв в тренировках", color: "#f59e0b" }       // Сб
+    };
+
+    let db = JSON.parse(localStorage.getItem('gym_v8_db')) || {};
+    let weights = JSON.parse(localStorage.getItem('gym_v8_weights')) || {};
+    let selectedTypes = JSON.parse(localStorage.getItem('gym_v8_selected')) || { dip: 'Классика', pull: 'Широкий', push: 'Классика', abs: 'Колесо' };
     let today = new Date().toISOString().split('T')[0];
     let viewingDate = today;
     let chartInstance;
     let currentChartSource = 'Weight';
 
     function init() {
+        updatePlanBanner();
         renderCalendar();
         renderExercises();
         updateWeightDisplay();
         updateChart();
+    }
+
+    function updatePlanBanner() {
+        const d = new Date(viewingDate).getDay();
+        const plan = weeklyPlan[d];
+        const names = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+        document.getElementById('plan-weekday').innerText = names[d];
+        document.getElementById('plan-title').innerText = plan.title;
+        document.getElementById('today-plan').style.borderLeftColor = plan.color;
     }
 
     function renderCalendar() {
@@ -121,110 +148,55 @@
         }).join('');
     }
 
-    function setType(exId, type) {
-        selectedTypes[exId] = type;
-        localStorage.setItem('gym_v7_selected', JSON.stringify(selectedTypes));
-        renderExercises();
-        if (currentChartSource === exId) updateChart();
-    }
+    function changeDate(key) { viewingDate = key; renderCalendar(); renderExercises(); updateWeightDisplay(); updatePlanBanner(); updateChart(); }
 
-    function setChartSource(source) {
-        currentChartSource = source;
-        const btns = document.querySelectorAll('.menu-btn');
-        btns.forEach(b => b.classList.toggle('active', b.getAttribute('onclick').includes(`'${source}'`)));
-        updateChart();
+    function setType(exId, type) { selectedTypes[exId] = type; localStorage.setItem('gym_v8_selected', JSON.stringify(selectedTypes)); renderExercises(); updateChart(); }
+    
+    function setChartSource(source) { 
+        currentChartSource = source; 
+        document.querySelectorAll('.menu-btn').forEach(b => b.classList.toggle('active', b.innerText.toLowerCase().includes(source === 'Weight' ? 'вес' : source === 'dip' ? 'брус' : source === 'pull' ? 'турн' : 'отжим')));
+        updateChart(); 
     }
 
     function addSet(exId) {
         const inp = document.getElementById(`in-${exId}`);
-        const val = parseInt(inp.value);
-        if(!val) return;
+        const val = parseInt(inp.value); if(!val) return;
         const storageKey = `${exId}_${selectedTypes[exId]}`;
-        if(!db[today]) db[today] = {};
-        if(!db[today][storageKey]) db[today][storageKey] = [];
-        db[today][storageKey].push(val);
-        localStorage.setItem('gym_v7_db', JSON.stringify(db));
+        if(!db[today]) db[today] = {}; if(!db[today][storageKey]) db[today][storageKey] = [];
+        db[today][storageKey].push(val); localStorage.setItem('gym_v8_db', JSON.stringify(db));
         inp.value = ''; renderExercises(); updateChart(); startTimer();
     }
 
     function saveWeight() {
-        const val = document.getElementById('w-in').value;
-        if(!val) return;
-        weights[today] = parseFloat(val);
-        localStorage.setItem('gym_v7_weights', JSON.stringify(weights));
-        updateWeightDisplay();
-        if (currentChartSource === 'Weight') updateChart();
-        document.getElementById('w-in').value = '';
+        const val = document.getElementById('w-in').value; if(!val) return;
+        weights[today] = parseFloat(val); localStorage.setItem('gym_v8_weights', JSON.stringify(weights));
+        updateWeightDisplay(); updateChart(); document.getElementById('w-in').value = '';
     }
 
-    function updateWeightDisplay() {
-        document.getElementById('cur-w').innerText = (weights[viewingDate] || '--') + ' кг';
-    }
+    function updateWeightDisplay() { document.getElementById('cur-w').innerText = (weights[viewingDate] || '--') + ' кг'; }
 
     function updateChart() {
         const ctx = document.getElementById('mainChart').getContext('2d');
-        let labels = [], dataPoints = [], labelText = "";
-
-        const last7Days = [];
-        for(let i=6; i>=0; i--) {
-            let d = new Date(); d.setDate(d.getDate() - i);
-            last7Days.push(d.toISOString().split('T')[0]);
-        }
-
-        if (currentChartSource === 'Weight') {
-            labelText = "Прогресс: Вес тела";
-            dataPoints = last7Days.map(date => weights[date] || null);
-        } else {
-            const activeType = selectedTypes[currentChartSource];
-            const storageKey = `${currentChartSource}_${activeType}`;
-            labelText = `Прогресс: ${activeType}`;
-            dataPoints = last7Days.map(date => {
-                const dayData = (db[date] && db[date][storageKey]) || [];
-                return dayData.length > 0 ? Math.max(...dayData) : 0;
-            });
-        }
-
-        document.getElementById('chart-label').innerText = labelText;
-        labels = last7Days.map(d => d.split('-')[2]);
+        const last7Days = []; for(let i=6; i>=0; i--) { let d = new Date(); d.setDate(d.getDate() - i); last7Days.push(d.toISOString().split('T')[0]); }
+        let dataPoints = currentChartSource === 'Weight' ? last7Days.map(date => weights[date] || null) : last7Days.map(date => {
+            const storageKey = `${currentChartSource}_${selectedTypes[currentChartSource]}`;
+            const dayData = (db[date] && db[date][storageKey]) || [];
+            return dayData.length > 0 ? Math.max(...dayData) : 0;
+        });
 
         if (chartInstance) chartInstance.destroy();
         chartInstance = new Chart(ctx, {
             type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: dataPoints,
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    borderWidth: 3,
-                    tension: 0.3,
-                    fill: true,
-                    pointRadius: 5,
-                    spanGaps: true
-                }]
-            },
-            options: {
-                plugins: { legend: { display: false } },
-                scales: { 
-                    y: { grid: { color: '#1f2937' }, ticks: { color: '#6b7280' }, beginAtZero: false },
-                    x: { grid: { display: false }, ticks: { color: '#6b7280' } }
-                }
-            }
+            data: { labels: last7Days.map(d => d.split('-')[2]), datasets: [{ data: dataPoints, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', borderWidth: 3, tension: 0.3, fill: true, spanGaps: true }] },
+            options: { plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#1f2937' }, ticks: { color: '#6b7280' } }, x: { grid: { display: false }, ticks: { color: '#6b7280' } } } }
         });
     }
 
-    function changeDate(key) { viewingDate = key; renderCalendar(); renderExercises(); updateWeightDisplay(); }
-
     let tId;
     function startTimer() {
-        clearInterval(tId);
-        const bar = document.getElementById('timer');
-        const val = document.getElementById('t-val');
+        clearInterval(tId); const bar = document.getElementById('timer'); const val = document.getElementById('t-val');
         let l = 60; bar.style.display = 'block'; val.innerText = l;
-        tId = setInterval(() => {
-            l--; val.innerText = l;
-            if(l<=0) { clearInterval(tId); bar.style.display='none'; }
-        }, 1000);
+        tId = setInterval(() => { l--; val.innerText = l; if(l<=0) { clearInterval(tId); bar.style.display='none'; } }, 1000);
     }
 
     init();
