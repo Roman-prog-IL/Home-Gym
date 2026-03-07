@@ -3,182 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Gym OS Elite</title>
+    <title>Gym Analytics Pro</title>
     <style>
-        :root {
-            --bg: #05070a;
-            --card: #111827;
-            --accent: #3b82f6;
-            --success: #10b981;
-            --text-dim: #6b7280;
-        }
-
-        body {
-            background: var(--bg);
-            color: white;
-            font-family: -apple-system, system-ui, sans-serif;
-            margin: 0;
-            padding: 20px 20px 100px;
-            -webkit-user-select: none;
-        }
-
-        /* График недели */
-        .week-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 8px;
-            margin-bottom: 30px;
-            background: var(--card);
-            padding: 15px;
-            border-radius: 20px;
-        }
-        .day { text-align: center; }
-        .day-name { font-size: 10px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 5px; }
-        .day-box { 
-            height: 35px; border-radius: 10px; background: #1f2937; 
-            display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold;
-        }
-        .day.active .day-box { background: var(--accent); color: white; box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); }
-        .day.active .day-name { color: var(--accent); font-weight: bold; }
-
-        header h1 { font-size: 28px; margin: 0 0 5px 0; letter-spacing: -1px; }
-        .sub-header { color: var(--text-dim); font-size: 14px; margin-bottom: 25px; }
-
-        /* Карточки упражнений */
-        .exercise-card {
-            background: var(--card);
-            border-radius: 24px;
-            padding: 20px;
-            margin-bottom: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-        .ex-info h2 { margin: 0; font-size: 20px; }
-        .ex-info p { margin: 5px 0 0; color: var(--text-dim); font-size: 13px; }
-
-        .counter-section { text-align: right; display: flex; align-items: center; gap: 15px; }
-        .count-display { font-size: 32px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--accent); }
+        :root { --bg: #05070a; --card: #111827; --accent: #3b82f6; --success: #10b981; --text-dim: #6b7280; }
+        body { background: var(--bg); color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 20px 20px 120px; }
         
-        .add-btn {
-            width: 50px; height: 50px; border-radius: 15px;
-            background: #1f2937; border: none; color: white;
-            font-size: 24px; font-weight: bold; cursor: pointer;
-            transition: all 0.2s;
-        }
-        .add-btn:active { background: var(--accent); transform: scale(0.9); }
+        /* Календарь */
+        .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 25px; background: var(--card); padding: 15px; border-radius: 20px; }
+        .day { text-align: center; cursor: pointer; }
+        .day-name { font-size: 10px; color: var(--text-dim); text-transform: uppercase; }
+        .day-box { height: 35px; border-radius: 10px; background: #1f2937; display: flex; align-items: center; justify-content: center; font-size: 14px; margin-top: 5px; }
+        .day.active .day-box { background: var(--accent); box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
 
-        /* Плавающий таймер */
-        #timer-bar {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background: var(--accent); padding: 12px 30px; border-radius: 50px;
-            display: none; font-weight: bold; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100;
-        }
+        /* Карточки */
+        .ex-card { background: var(--card); border-radius: 24px; padding: 20px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); }
+        .ex-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        h2 { margin: 0; font-size: 18px; letter-spacing: -0.5px; }
+        
+        .history-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; min-height: 20px; }
+        .pill { background: #1f2937; color: var(--accent); padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; border: 1px solid rgba(59, 130, 246, 0.2); }
 
-        .reset-link { text-align: center; color: var(--text-dim); font-size: 12px; margin-top: 30px; display: block; }
+        /* Ввод */
+        .input-group { display: flex; gap: 10px; align-items: center; }
+        input { background: #1f2937; border: 1px solid #374151; color: white; width: 50px; padding: 12px 5px; border-radius: 12px; text-align: center; font-size: 18px; font-weight: bold; }
+        .add-btn { background: var(--accent); border: none; color: white; width: 45px; height: 45px; border-radius: 12px; font-size: 20px; font-weight: bold; }
+
+        /* Таймер */
+        #timer { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--accent); padding: 12px 30px; border-radius: 50px; display: none; font-weight: bold; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
 
-    <div class="week-grid" id="week-calendar">
-        </div>
+<div class="week-grid" id="calendar"></div>
 
-    <header>
-        <h1 id="workout-title">Силовая тренировка</h1>
-        <div class="sub-header" id="today-date">Загрузка...</div>
-    </header>
+<header style="margin-bottom: 20px;">
+    <h1 id="view-date" style="font-size: 24px; margin: 0;">Сегодня</h1>
+    <p style="color: var(--text-dim); font-size: 14px; margin: 5px 0;">Записывай каждый подход</p>
+</header>
 
-    <div id="exercise-list">
-        </div>
+<div id="exercise-list"></div>
 
-    <div id="timer-bar">ОТДЫХ: <span id="timer-val">60</span>с</div>
-
-    <a href="#" class="reset-link" onclick="resetData()">Сбросить сегодняшние результаты</a>
+<div id="timer">ОТДЫХ: <span id="t-val">60</span>с</div>
 
 <script>
-    const daysShort = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-    const exercises = ['Брусья', 'Турник', 'Отжимания', 'Пресс', 'Дорожка (км)'];
-    
-    // Загрузка состояния из памяти
-    let stats = JSON.parse(localStorage.getItem('gym_elite_data')) || {};
-    let todayKey = new Date().toISOString().split('T')[0];
-    if (!stats[todayKey]) stats[todayKey] = Array(exercises.length).fill(0);
+    const exercises = ['Брусья', 'Турник', 'Отжимания', 'Пресс'];
+    let db = JSON.parse(localStorage.getItem('gym_db_v3')) || {};
+    let today = new Date().toISOString().split('T')[0];
+    let viewingDate = today;
 
     function init() {
-        // Рендер календаря
-        const calendar = document.getElementById('week-calendar');
-        const currentDay = new Date().getDay();
-        calendar.innerHTML = daysShort.map((day, i) => `
-            <div class="day ${i === currentDay ? 'active' : ''}">
-                <div class="day-name">${day}</div>
-                <div class="day-box">${new Date(new Date().setDate(new Date().getDate() - currentDay + i)).getDate()}</div>
-            </div>
-        `).join('');
+        renderCalendar();
+        renderExercises();
+    }
 
-        // Дата в заголовке
-        const d = new Date();
-        document.getElementById('today-date').innerText = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+    function renderCalendar() {
+        const cal = document.getElementById('calendar');
+        const days = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+        const now = new Date();
+        cal.innerHTML = '';
+        for(let i=0; i<7; i++) {
+            let d = new Date(); d.setDate(now.getDate() - now.getDay() + i);
+            let key = d.toISOString().split('T')[0];
+            cal.innerHTML += `
+                <div class="day ${key === viewingDate ? 'active' : ''}" onclick="changeDate('${key}')">
+                    <div class="day-name">${days[i]}</div>
+                    <div class="day-box">${d.getDate()}</div>
+                </div>`;
+        }
+    }
 
-        // Список упражнений
+    function renderExercises() {
         const list = document.getElementById('exercise-list');
-        list.innerHTML = exercises.map((name, i) => `
-            <div class="exercise-card">
-                <div class="ex-info">
-                    <h2>${name}</h2>
-                    <p>${i === 4 ? 'Дистанция' : 'Выполнено подходов'}</p>
-                </div>
-                <div class="counter-section">
-                    <div class="count-display" id="val-${i}">${stats[todayKey][i]}</div>
-                    <button class="add-btn" onclick="addSet(${i})">${i === 4 ? '+0.1' : '+'}</button>
-                </div>
-            </div>
-        `).join('');
+        const data = db[viewingDate] || {};
+        list.innerHTML = exercises.map(ex => {
+            const sets = data[ex] || [];
+            return `
+                <div class="ex-card">
+                    <div class="ex-header">
+                        <h2>${ex}</h2>
+                        ${viewingDate === today ? `
+                        <div class="input-group">
+                            <input type="number" id="in-${ex}" placeholder="0" inputmode="numeric">
+                            <button class="add-btn" onclick="addSet('${ex}')">+</button>
+                        </div>` : ''}
+                    </div>
+                    <div class="history-pills">
+                        ${sets.map(s => `<div class="pill">${s}</div>`).join('') || '<span style="color:#374151; font-size:12px;">Нет записей</span>'}
+                    </div>
+                </div>`;
+        }).join('');
     }
 
-    function addSet(index) {
-        if (index === 4) {
-            stats[todayKey][index] = parseFloat((stats[todayKey][index] + 0.1).toFixed(1));
-        } else {
-            stats[todayKey][index]++;
-            startTimer();
-        }
-        save();
-        document.getElementById(`val-${index}`).innerText = stats[todayKey][index];
-        if (window.navigator.vibrate) window.navigator.vibrate(40);
-    }
+    function addSet(name) {
+        const inp = document.getElementById(`in-${name}`);
+        const val = parseInt(inp.value);
+        if(!val) return;
 
-    let timerId;
-    function startTimer() {
-        clearInterval(timerId);
-        const bar = document.getElementById('timer-bar');
-        const val = document.getElementById('timer-val');
-        let left = 60;
+        if(!db[today]) db[today] = {};
+        if(!db[today][name]) db[today][name] = [];
         
-        bar.style.display = 'block';
-        val.innerText = left;
+        db[today][name].push(val);
+        localStorage.setItem('gym_db_v3', JSON.stringify(db));
+        
+        inp.value = '';
+        renderExercises();
+        startTimer();
+        if(window.navigator.vibrate) window.navigator.vibrate(50);
+    }
 
-        timerId = setInterval(() => {
-            left--;
-            val.innerText = left;
-            if (left <= 0) {
-                clearInterval(timerId);
-                bar.style.display = 'none';
-                if (window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
-            }
+    function changeDate(key) {
+        viewingDate = key;
+        document.getElementById('view-date').innerText = key === today ? 'Сегодня' : key;
+        renderCalendar();
+        renderExercises();
+    }
+
+    let tId;
+    function startTimer() {
+        clearInterval(tId);
+        const bar = document.getElementById('timer');
+        const val = document.getElementById('t-val');
+        let l = 60; bar.style.display = 'block'; val.innerText = l;
+        tId = setInterval(() => {
+            l--; val.innerText = l;
+            if(l<=0) { clearInterval(tId); bar.style.display='none'; if(window.navigator.vibrate) window.navigator.vibrate([100,50,100]); }
         }, 1000);
-    }
-
-    function save() {
-        localStorage.setItem('gym_elite_data', JSON.stringify(stats));
-    }
-
-    function resetData() {
-        if(confirm('Обнулить сегодняшнюю тренировку?')) {
-            stats[todayKey] = Array(exercises.length).fill(0);
-            save();
-            init();
-        }
     }
 
     init();
