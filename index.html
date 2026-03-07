@@ -2,145 +2,203 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gym OS - Тренировка</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Gym OS Pro</title>
     <style>
-        :root { --bg: #0f172a; --card: #1e293b; --accent: #3b82f6; --success: #22c55e; }
-        body { background: var(--bg); color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 20px; padding-bottom: 100px; }
-        .header { margin-bottom: 20px; }
-        .date { color: #94a3b8; font-size: 14px; }
-        h1 { margin: 5px 0; font-size: 28px; color: var(--accent); }
-        
-        /* Таймер отдыха */
-        #rest-timer { 
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: var(--accent); padding: 15px 40px; border-radius: 50px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: none; text-align: center; z-index: 100;
+        :root {
+            --bg: #070b14;
+            --card: #151c2c;
+            --accent: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --text-main: #ffffff;
+            --text-dim: #94a3b8;
         }
 
-        .grid { display: grid; gap: 15px; }
-        .card { background: var(--card); border-radius: 20px; padding: 18px; border-left: 6px solid var(--accent); position: relative; }
-        .card.done { border-left-color: var(--success); opacity: 0.8; }
-        
-        .ex-title { font-size: 18px; font-weight: bold; margin-bottom: 5px; display: block; }
-        .ex-info { color: #94a3b8; font-size: 13px; }
-        
-        .sets-dots { display: flex; gap: 8px; margin-top: 15px; }
-        .dot { width: 12px; height: 12px; border-radius: 50%; background: #334155; }
-        .dot.active { background: var(--success); box-shadow: 0 0 8px var(--success); }
-
-        .btn-plus { 
-            position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
-            background: var(--accent); border: none; width: 50px; height: 50px;
-            border-radius: 15px; color: white; font-size: 24px; font-weight: bold;
+        body {
+            background: var(--bg);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 20px 20px 120px 20px;
+            -webkit-font-smoothing: antialiased;
         }
-        .btn-plus:disabled { background: #334155; color: #64748b; }
 
-        .treadmill { grid-column: 1 / -1; background: #1e293b; border-left-color: #eab308; }
+        header { margin-bottom: 30px; margin-top: 10px; }
+        .date { color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 12px; }
+        h1 { font-size: 34px; margin: 5px 0; font-weight: 800; letter-spacing: -1px; }
+
+        /* Сетка упражнений */
+        .grid { display: grid; gap: 16px; }
+
+        .card {
+            background: var(--card);
+            border-radius: 24px;
+            padding: 20px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .card:active { transform: scale(0.98); }
+
+        .ex-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+        .ex-name { font-size: 20px; font-weight: 700; display: block; }
+        .ex-meta { font-size: 13px; color: var(--text-dim); display: block; margin-top: 4px; }
+
+        /* Индикатор подходов */
+        .sets-wrapper { display: flex; gap: 10px; align-items: center; }
+        .set-node {
+            width: 14px; height: 14px; border-radius: 4px;
+            background: rgba(255,255,255,0.1);
+            transition: all 0.4s ease;
+        }
+        .set-node.active { 
+            background: var(--success); 
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); 
+            transform: scale(1.1);
+        }
+
+        /* Кнопка + */
+        .add-btn {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border: none; width: 54px; height: 54px; border-radius: 18px;
+            color: white; font-size: 28px; font-weight: 300;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+        .add-btn:disabled { background: #2d3748; box-shadow: none; opacity: 0.5; }
+
+        /* Плавающий Таймер */
+        #rest-overlay {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(59, 130, 246, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 16px 32px; border-radius: 40px;
+            display: none; align-items: center; gap: 15px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            z-index: 1000; border: 1px solid rgba(255,255,255,0.2);
+        }
+        .timer-ring { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+        /* Спец-карточка Дорожка */
+        .treadmill { border-bottom: 4px solid var(--warning); }
+        .tread-stats { display: flex; justify-content: space-between; margin-top: 15px; }
+        .stat-item { text-align: center; }
+        .stat-val { display: block; font-size: 18px; font-weight: 700; color: var(--warning); }
+        .stat-lab { font-size: 10px; color: var(--text-dim); text-transform: uppercase; }
+
+        /* Кнопка сброса */
+        .reset-btn {
+            margin-top: 40px; background: transparent; border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-dim); padding: 12px; width: 100%; border-radius: 15px; font-size: 12px;
+        }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <div class="date" id="current-date"></div>
-    <h1 id="workout-name">Силовая А</h1>
+<header>
+    <div class="date" id="date-string">7 марта / Суббота</div>
+    <h1>Тренировка А</h1>
+</header>
+
+<div id="rest-overlay">
+    <div style="text-align: left;">
+        <div style="font-size: 10px; opacity: 0.8; font-weight: bold;">ОТДЫХ</div>
+        <div class="timer-ring"><span id="timer-sec">60</span><span style="font-size: 14px; opacity: 0.7;"> сек</span></div>
+    </div>
+    <button onclick="stopRest()" style="background: rgba(0,0,0,0.2); border: none; color: white; padding: 8px 12px; border-radius: 10px; font-size: 12px;">Пропустить</button>
 </div>
 
-<div id="rest-timer">
-    <span style="font-size: 12px; display: block; opacity: 0.8;">ОТДЫХ</span>
-    <span id="timer-val" style="font-size: 24px; font-weight: bold;">60</span> сек
-</div>
-
-<div class="grid">
-    <div class="card" id="ex1">
-        <span class="ex-title">1. Брусья</span>
-        <span class="ex-info">Цель: 5 подходов по 12 раз</span>
-        <div class="sets-dots" id="dots1"></div>
-        <button class="btn-plus" onclick="doSet(1, 5)">+</button>
+<div class="grid" id="exercises-list">
     </div>
 
-    <div class="card" id="ex2" style="border-left-color: #f97316;">
-        <span class="ex-title">2. Турник</span>
-        <span class="ex-info">Цель: 4 подхода по 8 раз</span>
-        <div class="sets-dots" id="dots2"></div>
-        <button class="btn-plus" onclick="doSet(2, 4)">+</button>
-    </div>
-
-    <div class="card" id="ex3" style="border-left-color: #22c55e;">
-        <span class="ex-title">3. Отжимания</span>
-        <span class="ex-info">Цель: 4 подхода по 20 раз</span>
-        <div class="sets-dots" id="dots3"></div>
-        <button class="btn-plus" onclick="doSet(3, 4)">+</button>
-    </div>
-
-    <div class="card" id="ex4" style="border-left-color: #8b5cf6;">
-        <span class="ex-title">4. Пресс</span>
-        <span class="ex-info">Колесо: 4 подхода по 15 раз</span>
-        <div class="sets-dots" id="dots4"></div>
-        <button class="btn-plus" onclick="doSet(4, 4)">+</button>
-    </div>
-
-    <div class="card treadmill">
-        <span class="ex-title">5. Беговая дорожка</span>
-        <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 14px; color: #94a3b8;">
-            <span>Скорость: <b>6.5</b></span>
-            <span>Пульс: <b>130</b></span>
-            <span>Время: <b>20 мин</b></span>
-        </div>
-    </div>
-</div>
+<button class="reset-btn" onclick="resetAll()">Сбросить прогресс тренировки</button>
 
 <script>
-    const state = JSON.parse(localStorage.getItem('gym_state')) || { 1:0, 2:0, 3:0, 4:0 };
-    let timerInterval;
+    const exercises = [
+        { id: 0, name: 'Брусья', goal: '5 подходов по 12 раз', sets: 5, color: '#3b82f6' },
+        { id: 1, name: 'Турник', goal: '4 подхода по 8 раз', sets: 4, color: '#f97316' },
+        { id: 2, name: 'Отжимания', goal: '4 подхода по 20 раз', sets: 4, color: '#10b981' },
+        { id: 3, name: 'Пресс (Колесо)', goal: '4 подхода по 15 раз', sets: 4, color: '#8b5cf6' }
+    ];
+
+    let state = JSON.parse(localStorage.getItem('gym_pro_state')) || [0, 0, 0, 0];
+    let timer;
 
     function init() {
         const d = new Date();
-        const months = ['марта', 'апреля', 'мая']; // упрощено
-        document.getElementById('current-date').innerText = d.getDate() + ' ' + months[d.getMonth() - 2];
-        
-        for(let i=1; i<=4; i++) renderDots(i);
+        const days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+        const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+        document.getElementById('date-string').innerText = `${d.getDate()} ${months[d.getMonth()]} / ${days[d.getDay()]}`;
+
+        const list = document.getElementById('exercises-list');
+        list.innerHTML = exercises.map((ex, idx) => `
+            <div class="card" style="border-left: 4px solid ${ex.color}">
+                <div class="ex-header">
+                    <div>
+                        <span class="ex-name">${ex.name}</span>
+                        <span class="ex-meta">${ex.goal}</span>
+                    </div>
+                    <button class="add-btn" id="btn-${idx}" onclick="completeSet(${idx})">+</button>
+                </div>
+                <div class="sets-wrapper" id="sets-${idx}">
+                    ${Array(ex.sets).fill().map((_, i) => `<div class="set-node ${i < state[idx] ? 'active' : ''}"></div>`).join('')}
+                </div>
+            </div>
+        `).join('') + `
+            <div class="card treadmill">
+                <span class="ex-name">Беговая дорожка</span>
+                <span class="ex-meta">LISS Кардио после силовой</span>
+                <div class="tread-stats">
+                    <div class="stat-item"><span class="stat-val">6.5</span><span class="stat-lab">км/ч</span></div>
+                    <div class="stat-item"><span class="stat-val">130</span><span class="stat-lab">пульс</span></div>
+                    <div class="stat-item"><span class="stat-val">20</span><span class="stat-lab">мин</span></div>
+                </div>
+            </div>
+        `;
     }
 
-    function renderDots(id) {
-        const container = document.getElementById('dots'+id);
-        const max = id === 1 ? 5 : 4;
-        container.innerHTML = '';
-        for(let j=0; j<max; j++) {
-            const dot = document.createElement('div');
-            dot.className = `dot ${j < state[id] ? 'active' : ''}`;
-            container.appendChild(dot);
-        }
-    }
-
-    function doSet(id, max) {
-        if(state[id] < max) {
-            state[id]++;
-            localStorage.setItem('gym_state', JSON.stringify(state));
-            renderDots(id);
+    function completeSet(idx) {
+        if (state[idx] < exercises[idx].sets) {
+            state[idx]++;
+            save();
+            render();
             startRest();
+            
+            // Вибрация на iPhone при нажатии
+            if (window.navigator.vibrate) window.navigator.vibrate(50);
         }
     }
 
     function startRest() {
-        clearInterval(timerInterval);
-        const timerEl = document.getElementById('rest-timer');
-        const valEl = document.getElementById('timer-val');
+        clearInterval(timer);
+        const overlay = document.getElementById('rest-overlay');
+        const display = document.getElementById('timer-sec');
         let timeLeft = 60;
-        
-        timerEl.style.display = 'block';
-        valEl.innerText = timeLeft;
 
-        timerInterval = setInterval(() => {
+        overlay.style.display = 'flex';
+        display.innerText = timeLeft;
+
+        timer = setInterval(() => {
             timeLeft--;
-            valEl.innerText = timeLeft;
-            if(timeLeft <= 0) {
-                clearInterval(timerInterval);
-                timerEl.style.display = 'none';
-                window.navigator.vibrate(200); // Вибрация в конце
+            display.innerText = timeLeft;
+            if (timeLeft <= 0) {
+                stopRest();
+                // Финальный вибросигнал
+                if (window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
             }
         }, 1000);
     }
+
+    function stopRest() {
+        clearInterval(timer);
+        document.getElementById('rest-overlay').style.display = 'none';
+    }
+
+    function save() { localStorage.setItem('gym_pro_state', JSON.stringify(state)); }
+    function render() { init(); }
+    function resetAll() { if(confirm('Сбросить прогресс?')) { state = [0,0,0,0]; save(); render(); } }
 
     init();
 </script>
