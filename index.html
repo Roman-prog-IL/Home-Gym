@@ -3,48 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Gym Analytics + Scale</title>
+    <title>Gym Analytics Ultra</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --bg: #05070a; --card: #111827; --accent: #3b82f6; --success: #10b981; --text-dim: #6b7280; }
         body { background: var(--bg); color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 20px 20px 140px; }
         
         .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 25px; background: var(--card); padding: 15px; border-radius: 20px; }
-        .day { text-align: center; cursor: pointer; opacity: 0.5; }
+        .day { text-align: center; cursor: pointer; opacity: 0.4; }
         .day.active { opacity: 1; }
         .day-box { height: 35px; border-radius: 10px; background: #1f2937; display: flex; align-items: center; justify-content: center; font-size: 14px; margin-top: 5px; }
         .day.active .day-box { background: var(--accent); box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
 
-        .ex-card { background: var(--card); border-radius: 24px; padding: 20px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); }
+        .ex-card { background: var(--card); border-radius: 24px; padding: 20px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); }
         .ex-header { display: flex; justify-content: space-between; align-items: center; }
         .input-group { display: flex; gap: 8px; }
-        input { background: #1f2937; border: 1px solid #374151; color: white; width: 45px; padding: 10px 5px; border-radius: 10px; text-align: center; font-size: 16px; }
-        .add-btn { background: var(--accent); border: none; color: white; width: 40px; height: 40px; border-radius: 10px; font-weight: bold; }
+        input { background: #1f2937; border: 1px solid #374151; color: white; width: 50px; padding: 10px; border-radius: 12px; text-align: center; font-size: 16px; }
+        .add-btn { background: var(--accent); border: none; color: white; width: 44px; height: 44px; border-radius: 12px; font-weight: bold; font-size: 20px; }
 
-        .history-pills { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 12px; }
-        .pill { background: rgba(59, 130, 246, 0.1); color: var(--accent); padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; border: 1px solid rgba(59, 130, 246, 0.2); }
+        .history-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+        .pill { background: rgba(59, 130, 246, 0.1); color: var(--accent); padding: 5px 12px; border-radius: 10px; font-size: 13px; font-weight: 800; border: 1px solid rgba(59, 130, 246, 0.2); }
 
-        /* Блок Весов */
-        .scale-card { background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid var(--accent); }
-        
-        /* График */
-        .chart-container { background: var(--card); border-radius: 24px; padding: 15px; margin-top: 20px; border: 1px solid rgba(255,255,255,0.05); }
+        /* Аналитика */
+        .analytics-box { background: var(--card); border-radius: 24px; padding: 20px; margin-top: 25px; border: 1px solid rgba(255,255,255,0.1); }
+        .chart-nav { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 15px; scrollbar-width: none; }
+        .chart-nav::-webkit-scrollbar { display: none; }
+        .nav-btn { background: #1f2937; border: none; color: var(--text-dim); padding: 8px 16px; border-radius: 12px; white-space: nowrap; font-size: 12px; font-weight: 600; }
+        .nav-btn.active { background: var(--accent); color: white; }
 
-        #timer { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--accent); padding: 12px 30px; border-radius: 50px; display: none; font-weight: bold; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        #timer { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--accent); padding: 15px 35px; border-radius: 50px; display: none; font-weight: 800; z-index: 1000; box-shadow: 0 10px 40px rgba(0,0,0,0.6); border: 2px solid rgba(255,255,255,0.2); }
     </style>
 </head>
 <body>
 
 <div class="week-grid" id="calendar"></div>
 
-<div class="ex-card scale-card">
+<div class="ex-card" style="border-bottom: 2px solid var(--success);">
     <div class="ex-header">
-        <div>
-            <h2 style="margin:0; font-size:18px;">⚖️ Вес тела</h2>
-            <span id="last-weight" style="font-size:12px; color:var(--text-dim)">Не записан</span>
-        </div>
+        <div><h2 style="margin:0; font-size:16px;">⚖️ Вес тела</h2><span id="cur-w" style="font-size:12px; color:var(--text-dim)">--</span></div>
         <div class="input-group">
-            <input type="number" id="weight-in" step="0.1" placeholder="0.0" style="width:60px;">
+            <input type="number" id="w-in" step="0.1" placeholder="0.0" style="width:70px;">
             <button class="add-btn" style="background:var(--success)" onclick="saveWeight()">OK</button>
         </div>
     </div>
@@ -52,26 +50,33 @@
 
 <div id="exercise-list"></div>
 
-<div class="chart-container">
-    <h3 style="margin: 0 0 15px 0; font-size: 14px; color: var(--text-dim); text-transform: uppercase;">Тренд повторений</h3>
-    <canvas id="progressChart"></canvas>
+<div class="analytics-box">
+    <div class="chart-nav" id="chart-menu">
+        <button class="nav-btn active" onclick="updateChart('Weight')">Вес</button>
+        <button class="nav-btn" onclick="updateChart('Брусья')">Брусья</button>
+        <button class="nav-btn" onclick="updateChart('Турник')">Турник</button>
+        <button class="nav-btn" onclick="updateChart('Отжимания')">Отжимания</button>
+        <button class="nav-btn" onclick="updateChart('Пресс')">Пресс</button>
+    </div>
+    <canvas id="mainChart"></canvas>
 </div>
 
 <div id="timer">ОТДЫХ: <span id="t-val">60</span>с</div>
 
 <script>
     const exercises = ['Брусья', 'Турник', 'Отжимания', 'Пресс'];
-    let db = JSON.parse(localStorage.getItem('gym_db_v4')) || {};
-    let weights = JSON.parse(localStorage.getItem('gym_weights')) || {};
+    let db = JSON.parse(localStorage.getItem('gym_ultra_db')) || {};
+    let weights = JSON.parse(localStorage.getItem('gym_ultra_weights')) || {};
     let today = new Date().toISOString().split('T')[0];
     let viewingDate = today;
-    let myChart;
+    let chartInstance;
+    let currentChartType = 'Weight';
 
     function init() {
         renderCalendar();
         renderExercises();
-        updateWeightInfo();
-        renderChart();
+        updateWeightDisplay();
+        updateChart(currentChartType);
     }
 
     function renderCalendar() {
@@ -82,11 +87,7 @@
         for(let i=0; i<7; i++) {
             let d = new Date(); d.setDate(now.getDate() - now.getDay() + i);
             let key = d.toISOString().split('T')[0];
-            cal.innerHTML += `
-                <div class="day ${key === viewingDate ? 'active' : ''}" onclick="changeDate('${key}')">
-                    <div class="day-name">${days[i]}</div>
-                    <div class="day-box">${d.getDate()}</div>
-                </div>`;
+            cal.innerHTML += `<div class="day ${key === viewingDate ? 'active' : ''}" onclick="changeDate('${key}')"><div class="day-name">${days[i]}</div><div class="day-box">${d.getDate()}</div></div>`;
         }
     }
 
@@ -95,18 +96,10 @@
         const data = db[viewingDate] || {};
         list.innerHTML = exercises.map(ex => {
             const sets = data[ex] || [];
-            return `
-                <div class="ex-card">
-                    <div class="ex-header">
-                        <h2>${ex}</h2>
-                        ${viewingDate === today ? `
-                        <div class="input-group">
-                            <input type="number" id="in-${ex}" placeholder="0" inputmode="numeric">
-                            <button class="add-btn" onclick="addSet('${ex}')">+</button>
-                        </div>` : ''}
-                    </div>
-                    <div class="history-pills">${sets.map(s => `<div class="pill">${s}</div>`).join('') || '<span style="color:#374151; font-size:12px;">Нет записей</span>'}</div>
-                </div>`;
+            return `<div class="ex-card">
+                <div class="ex-header"><h2>${ex}</h2>${viewingDate === today ? `<div class="input-group"><input type="number" id="in-${ex}" placeholder="0" inputmode="numeric"><button class="add-btn" onclick="addSet('${ex}')">+</button></div>` : ''}</div>
+                <div class="history-pills">${sets.map(s => `<div class="pill">${s}</div>`).join('') || '<span style="color:#374151; font-size:12px;">Пусто</span>'}</div>
+            </div>`;
         }).join('');
     }
 
@@ -117,57 +110,60 @@
         if(!db[today]) db[today] = {};
         if(!db[today][name]) db[today][name] = [];
         db[today][name].push(val);
-        localStorage.setItem('gym_db_v4', JSON.stringify(db));
-        inp.value = '';
-        renderExercises();
-        renderChart(); // Обновляем график
-        startTimer();
+        localStorage.setItem('gym_ultra_db', JSON.stringify(db));
+        inp.value = ''; renderExercises(); updateChart(name); startTimer();
     }
 
     function saveWeight() {
-        const val = document.getElementById('weight-in').value;
+        const val = document.getElementById('w-in').value;
         if(!val) return;
-        weights[today] = val;
-        localStorage.setItem('gym_weights', JSON.stringify(weights));
-        updateWeightInfo();
-        document.getElementById('weight-in').value = '';
+        weights[today] = parseFloat(val);
+        localStorage.setItem('gym_ultra_weights', JSON.stringify(weights));
+        updateWeightDisplay(); updateChart('Weight');
+        document.getElementById('w-in').value = '';
     }
 
-    function updateWeightInfo() {
-        const w = weights[viewingDate] || '--';
-        document.getElementById('last-weight').innerText = `Вес: ${w} кг`;
+    function updateWeightDisplay() {
+        document.getElementById('cur-w').innerText = (weights[viewingDate] || '--') + ' кг';
     }
 
-    function changeDate(key) {
-        viewingDate = key;
-        renderCalendar();
-        renderExercises();
-        updateWeightInfo();
-    }
+    function changeDate(key) { viewingDate = key; renderCalendar(); renderExercises(); updateWeightDisplay(); }
 
-    function renderChart() {
-        const ctx = document.getElementById('progressChart').getContext('2d');
-        const labels = Object.keys(db).sort().slice(-7); // Последние 7 дней
-        const dataPoints = labels.map(date => {
-            let total = 0;
-            Object.values(db[date]).forEach(exArray => {
-                total += exArray.reduce((a, b) => a + b, 0);
-            });
-            return total;
+    function updateChart(type) {
+        currentChartType = type;
+        const btns = document.querySelectorAll('.nav-btn');
+        btns.forEach(b => b.classList.toggle('active', b.innerText === type));
+
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        let labels = [], dataPoints = [];
+        
+        // Берем последние 10 дней с данными
+        const sortedDates = Object.keys(type === 'Weight' ? weights : db).sort().slice(-10);
+        
+        sortedDates.forEach(date => {
+            labels.push(date.split('-')[2]);
+            if(type === 'Weight') {
+                dataPoints.push(weights[date]);
+            } else {
+                const daySets = db[date][type] || [];
+                dataPoints.push(daySets.length > 0 ? Math.max(...daySets) : 0);
+            }
         });
 
-        if (myChart) myChart.destroy();
-        myChart = new Chart(ctx, {
+        if (chartInstance) chartInstance.destroy();
+        chartInstance = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: labels.map(l => l.split('-')[2]), // Только числа
+                labels: labels,
                 datasets: [{
-                    label: 'Всего повторов за день',
+                    label: type,
                     data: dataPoints,
-                    borderColor: '#3b82f6',
-                    tension: 0.4,
+                    borderColor: type === 'Weight' ? '#10b981' : '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.3,
                     fill: true,
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)'
+                    pointRadius: 5,
+                    pointBackgroundColor: type === 'Weight' ? '#10b981' : '#3b82f6'
                 }]
             },
             options: {
@@ -188,7 +184,7 @@
         let l = 60; bar.style.display = 'block'; val.innerText = l;
         tId = setInterval(() => {
             l--; val.innerText = l;
-            if(l<=0) { clearInterval(tId); bar.style.display='none'; }
+            if(l<=0) { clearInterval(tId); bar.style.display='none'; if(window.navigator.vibrate) window.navigator.vibrate([100,50,100]); }
         }, 1000);
     }
 
