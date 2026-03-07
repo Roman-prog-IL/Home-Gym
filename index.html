@@ -43,7 +43,24 @@
         
         .add-btn { background: var(--blue); border: none; color: white; width: 45px; height: 45px; border-radius: 14px; font-size: 20px; font-weight: bold; }
 
-        .pill { background: rgba(50, 215, 75, 0.1); color: var(--accent); padding: 8px 15px; border-radius: 10px; font-size: 16px; font-weight: 700; margin-top: 10px; display: inline-block; margin-right: 5px; }
+        /* Контейнер для цифры и крестика */
+        .sets-container { margin-top: 15px; display: flex; flex-wrap: wrap; gap: 12px; }
+        .pill-wrapper { position: relative; display: inline-block; }
+        
+        .pill { 
+            background: rgba(50, 215, 75, 0.1); color: var(--accent); 
+            padding: 8px 15px; border-radius: 10px; font-size: 16px; font-weight: 700; 
+        }
+
+        .delete-btn {
+            position: absolute; top: -8px; right: -8px;
+            background: var(--red); color: white; border: none;
+            width: 18px; height: 18px; border-radius: 50%;
+            font-size: 12px; font-weight: bold; line-height: 1;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            cursor: pointer;
+        }
 
         .controls-row { position: fixed; bottom: 30px; left: 16px; right: 16px; display: flex; flex-direction: column; gap: 10px; z-index: 100; }
         .timer-group { display: flex; gap: 10px; }
@@ -106,7 +123,6 @@
 </div>
 
 <script>
-    // Оставили только базовые упражнения
     const exercises = [
         { id: 'pull', name: 'Турник' },
         { id: 'dip', name: 'Брусья' },
@@ -154,7 +170,14 @@
                             <button class="add-btn" onclick="addSet('${ex.id}')">+</button>
                         </div>
                     ` : ''}
-                    <div class="sets-container">${sets.map(s => `<div class="pill">${s}</div>`).join('')}</div>
+                    <div class="sets-container">
+                        ${sets.map((s, idx) => `
+                            <div class="pill-wrapper">
+                                <div class="pill">${s}</div>
+                                ${viewingDate === today ? `<button class="delete-btn" onclick="removeSet('${ex.id}', ${idx})">×</button>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>`;
         }).join('');
     }
@@ -175,6 +198,16 @@
         saveDB();
         el.value = '';
         renderExercises(); updateChart();
+    }
+
+    // НОВАЯ ФУНКЦИЯ ДЛЯ УДАЛЕНИЯ
+    function removeSet(exId, index) {
+        if(confirm('Удалить этот подход?')) {
+            db[viewingDate][exId].splice(index, 1);
+            saveDB();
+            renderExercises();
+            updateChart();
+        }
     }
 
     function saveWeight() {
@@ -208,7 +241,7 @@
             labels.push(d.getDate());
             let val = 0;
             if(currentChartId === 'weight') val = db[k]?.weight || 0;
-            else val = db[k] && db[k][currentChartId] ? Math.max(...db[k][currentChartId]) : 0;
+            else val = db[k] && db[k][currentChartId] && db[k][currentChartId].length > 0 ? Math.max(...db[k][currentChartId]) : 0;
             data.push(val);
         }
         if (chartInstance) chartInstance.destroy();
