@@ -3,42 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gym OS</title>
+    <title>Home Gym OS</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="app-container">
         <header>
-            <h1 id="day-name">Воскресенье</h1>
-            <p id="full-date">8 марта 2026 г.</p>
+            <h1 id="current-day">Воскресенье</h1>
+            <p id="current-date">8 марта 2026 г.</p>
         </header>
 
         <div class="grid">
             <div class="card blue">
-                <span class="val">0</span>
+                <span class="val" id="dips-val">0</span>
                 <span class="lab">БРУСЬЯ</span>
             </div>
             <div class="card orange">
-                <span class="val">0</span>
+                <span class="val" id="pulls-val">0</span>
                 <span class="lab">ТУРНИК</span>
             </div>
             <div class="card yellow">
-                <span class="val">0.0</span>
+                <span class="val" id="run-val">0.0</span>
                 <span class="lab">ДОРОЖКА (КМ)</span>
             </div>
             <div class="card green">
-                <span class="val">0</span>
+                <span class="val" id="legs-val">0</span>
                 <span class="lab">ПРИСЕДЫ</span>
             </div>
         </div>
 
         <div class="actions">
              <div class="btn-box">
-                <span>ВОДА</span>
-                <button>+0.1</button>
-                <button>+0.3</button>
+                <span>ВОДА: <strong id="water-val">0.0</strong>л</span>
+                <div>
+                    <button onclick="changeValue('water', 0.1)">+0.1</button>
+                    <button onclick="changeValue('water', 0.3)">+0.3</button>
+                </div>
              </div>
         </div>
     </div>
+    <script src="script.js"></script>
 </body>
 </html>
