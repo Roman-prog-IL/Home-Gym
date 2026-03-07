@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Home Gym Pro</title>
+    <title>Home Gym Classic</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { 
@@ -14,7 +14,6 @@
         body { 
             background: var(--bg); color: white; font-family: -apple-system, sans-serif; 
             margin: 0; padding: 20px 16px 180px; -webkit-user-select: none;
-            transition: all 0.3s ease;
         }
 
         .app-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
@@ -27,16 +26,16 @@
         .ex-card, .analytics-box, .weight-card { 
             background: var(--card); border-radius: 24px; padding: 20px; 
             margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.05);
-            animation: fadeIn 0.5s ease-out;
+            animation: fadeIn 0.4s ease-out;
         }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
         .category-title { color: var(--accent); font-size: 22px; font-weight: 900; margin-bottom: 12px; }
         .weight-title { color: var(--accent); font-size: 11px; font-weight: 800; text-transform: uppercase; margin-bottom: 10px; opacity: 0.8; }
 
-        .chart-nav { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
-        .nav-btn { background: #2c2c2e; border: none; color: var(--text-dim); padding: 8px 12px; border-radius: 10px; font-size: 10px; font-weight: 700; white-space: nowrap; }
+        .chart-nav { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
+        .nav-btn { background: #2c2c2e; border: none; color: var(--text-dim); padding: 8px 14px; border-radius: 10px; font-size: 11px; font-weight: 700; white-space: nowrap; }
         .nav-btn.active { background: var(--blue); color: white; }
 
         .input-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
@@ -48,18 +47,18 @@
 
         .controls-row { position: fixed; bottom: 30px; left: 16px; right: 16px; display: flex; flex-direction: column; gap: 10px; z-index: 100; }
         .timer-group { display: flex; gap: 10px; }
-        .timer-btn { flex: 1; padding: 18px; border-radius: 20px; border: none; font-weight: 800; font-size: 14px; transition: 0.2s; }
+        .timer-btn { flex: 1; padding: 18px; border-radius: 20px; border: none; font-weight: 800; font-size: 14px; }
         
         #rest-btn { background: var(--blue); color: white; }
         #plank-btn { background: var(--accent); color: black; }
         .t-active { background: var(--red) !important; color: white !important; }
 
-        .backup-row { display: flex; gap: 10px; margin-top: 20px; opacity: 0.5; justify-content: center; }
-        .btn-small { background: none; border: 1px solid var(--text-dim); color: var(--text-dim); padding: 5px 10px; border-radius: 8px; font-size: 10px; }
-        
         .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 20px; background: var(--card); padding: 12px; border-radius: 20px; }
         .day-box { height: 40px; border-radius: 12px; background: #2c2c2e; display: flex; align-items: center; justify-content: center; font-weight: 700; }
         .day.active .day-box { background: var(--accent); color: black; }
+
+        .backup-row { display: flex; gap: 10px; margin-top: 20px; opacity: 0.4; justify-content: center; }
+        .btn-small { background: none; border: 1px solid var(--text-dim); color: var(--text-dim); padding: 5px 10px; border-radius: 8px; font-size: 9px; }
     </style>
 </head>
 <body>
@@ -67,8 +66,8 @@
 <div class="app-header">
     <div class="app-logo"></div>
     <div>
-        <h1 style="margin:0; font-size:20px;">Home Gym Pro</h1>
-        <p style="margin:0; font-size:10px; color:var(--accent); font-weight:700;">ISRAEL EDITION 🇮🇱</p>
+        <h1 style="margin:0; font-size:20px;">Home Gym</h1>
+        <p style="margin:0; font-size:10px; color:var(--accent); font-weight:700;">BASIC WORKOUT</p>
     </div>
 </div>
 
@@ -87,9 +86,8 @@
 <div id="exercise-list"></div>
 
 <div class="analytics-box">
-    <div class="weight-title">Прогресс (7 дней)</div>
-    <div class="chart-nav" id="chart-nav">
-        </div>
+    <div class="weight-title">Аналитика</div>
+    <div class="chart-nav" id="chart-nav"></div>
     <div style="height:180px;">
         <canvas id="mainChart"></canvas>
     </div>
@@ -108,13 +106,12 @@
 </div>
 
 <script>
+    // Оставили только базовые упражнения
     const exercises = [
         { id: 'pull', name: 'Турник' },
         { id: 'dip', name: 'Брусья' },
         { id: 'push', name: 'Отжимания' },
-        { id: 'squat', name: 'Приседания' },
-        { id: 'abs', name: 'Пресс / Планка' },
-        { id: 'extra', name: 'Доп. вес (кг)' }
+        { id: 'abs', name: 'Пресс / Планка' }
     ];
 
     let db = JSON.parse(localStorage.getItem('homegym_db_v29')) || {};
