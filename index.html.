@@ -4,44 +4,57 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home Gym OS</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        body { background-color: #0f172a; color: white; font-family: -apple-system, sans-serif; display: flex; justify-content: center; margin: 0; padding: 20px; }
+        .container { width: 100%; max-width: 400px; }
+        header h1 { font-size: 32px; margin: 0; }
+        #date-box { color: #94a3b8; font-size: 14px; margin-bottom: 25px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .card { background: #1e293b; padding: 20px; border-radius: 20px; border-left: 6px solid; display: flex; flex-direction: column; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .blue { border-color: #3b82f6; } .orange { border-color: #f97316; }
+        .yellow { border-color: #eab308; } .green { border-color: #22c55e; }
+        .val { font-size: 32px; font-weight: bold; margin-bottom: 4px; }
+        .lab { font-size: 11px; color: #94a3b8; font-weight: bold; letter-spacing: 0.5px; }
+        .actions { background: #1e293b; padding: 18px; border-radius: 20px; margin-top: 25px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-group button { background: #334155; color: #3b82f6; border: none; padding: 10px 14px; border-radius: 10px; font-weight: bold; margin-left: 6px; cursor: pointer; }
+        button:active { transform: scale(0.95); }
+    </style>
 </head>
 <body>
-    <div class="app-container">
+    <div class="container">
         <header>
-            <h1 id="current-day">Воскресенье</h1>
-            <p id="current-date">8 марта 2026 г.</p>
+            <h1 id="day-name">Загрузка...</h1>
+            <div id="date-box">Сегодня</div>
         </header>
 
         <div class="grid">
-            <div class="card blue">
-                <span class="val" id="dips-val">0</span>
-                <span class="lab">БРУСЬЯ</span>
-            </div>
-            <div class="card orange">
-                <span class="val" id="pulls-val">0</span>
-                <span class="lab">ТУРНИК</span>
-            </div>
-            <div class="card yellow">
-                <span class="val" id="run-val">0.0</span>
-                <span class="lab">ДОРОЖКА (КМ)</span>
-            </div>
-            <div class="card green">
-                <span class="val" id="legs-val">0</span>
-                <span class="lab">ПРИСЕДЫ</span>
-            </div>
+            <div class="card blue"><span class="val">0</span><span class="lab">БРУСЬЯ</span></div>
+            <div class="card orange"><span class="val">0</span><span class="lab">ТАНЦЫ/ТУРНИК</span></div>
+            <div class="card yellow"><span class="val">0.0</span><span class="lab">ДОРОЖКА</span></div>
+            <div class="card green"><span class="val">0</span><span class="lab">ПРИСЕДЫ</span></div>
         </div>
 
         <div class="actions">
-             <div class="btn-box">
-                <span>ВОДА: <strong id="water-val">0.0</strong>л</span>
-                <div>
-                    <button onclick="changeValue('water', 0.1)">+0.1</button>
-                    <button onclick="changeValue('water', 0.3)">+0.3</button>
-                </div>
-             </div>
+            <span>ВОДА: <strong id="water-val">0.0</strong>л</span>
+            <div class="btn-group">
+                <button onclick="addWater(0.1)">+0.1</button>
+                <button onclick="addWater(0.3)">+0.3</button>
+            </div>
         </div>
     </div>
-    <script src="script.js"></script>
+
+    <script>
+        let water = 0.0;
+        function addWater(val) {
+            water = Math.round((water + val) * 10) / 10;
+            document.getElementById('water-val').innerText = water.toFixed(1);
+        }
+
+        const days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+        const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+        const now = new Date();
+        document.getElementById('day-name').innerText = days[now.getDay()];
+        document.getElementById('date-box').innerText = now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear() + ' г.';
+    </script>
 </body>
 </html>
