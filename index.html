@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Gym Ultimate v17</title>
+    <title>Gym Pro v18</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --bg: #05070a; --card: #111827; --accent: #3b82f6; --success: #10b981; --text-dim: #6b7280; --error: #ef4444; }
@@ -20,6 +20,7 @@
         .weight-card { background: linear-gradient(90deg, #1e293b, #0f172a); border-radius: 20px; padding: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--success); }
         .weight-input-group { display: flex; gap: 8px; align-items: center; }
 
+        /* Упражнения */
         .ex-card { background: var(--card); border-radius: 24px; padding: 18px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); }
         .category-title { color: var(--accent); font-size: 10px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; }
         
@@ -34,16 +35,20 @@
         .history-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; min-height: 20px; }
         .pill { background: rgba(59, 130, 246, 0.1); color: var(--accent); padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; border: 1px solid rgba(59, 130, 246, 0.2); }
 
-        /* Аналитика */
+        /* Аналитика с подписью зоны */
         .analytics-box { background: var(--card); border-radius: 24px; padding: 20px; margin-top: 25px; border: 1px solid rgba(255,255,255,0.1); }
-        .chart-info { margin-bottom: 10px; height: 45px; }
+        .chart-header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .chart-label { font-size: 9px; color: var(--accent); font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
+        
+        .chart-info { height: 45px; }
         #chart-current-val { font-size: 20px; font-weight: 800; color: white; }
-        #chart-current-date { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+        #chart-current-date { font-size: 11px; color: var(--text-dim); }
 
         .chart-menu { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 15px; scrollbar-width: none; }
         .menu-btn { background: #1f2937; border: none; color: var(--text-dim); padding: 8px 14px; border-radius: 10px; font-size: 11px; font-weight: 700; white-space: nowrap; }
         .menu-btn.active { background: var(--accent); color: white; }
-        .chart-container { height: 180px; position: relative; touch-action: pan-x; }
+        
+        .chart-container { height: 200px; position: relative; touch-action: pan-x; margin-left: -10px; }
 
         .controls-row { position: fixed; bottom: 20px; left: 20px; right: 20px; display: flex; gap: 10px; z-index: 1000; }
         .timer-btn { flex: 1; padding: 18px; border-radius: 20px; border: none; font-weight: 800; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
@@ -62,17 +67,20 @@
         <div style="font-size: 10px; color: var(--success); font-weight: 800; text-transform: uppercase;">Вес тела</div>
         <div id="display-weight" style="font-size: 18px; font-weight: bold;">-- кг</div>
     </div>
-    <div class="weight-input-group" id="weight-input-area">
-        </div>
+    <div class="weight-input-group" id="weight-input-area"></div>
 </div>
 
 <div id="exercise-list"></div>
 
 <div class="analytics-box">
-    <div class="chart-info">
-        <div id="chart-current-date">Листай график пальцем</div>
-        <div id="chart-current-val">--</div>
+    <div class="chart-header-row">
+        <div class="chart-info">
+            <div id="chart-current-date">Интерактивный график</div>
+            <div id="chart-current-val">Листай пальцем</div>
+        </div>
+        <div class="chart-label">Зона прогресса</div>
     </div>
+    
     <div class="chart-menu">
         <button class="menu-btn active" id="btn-chart-pull" onclick="setChartSource('pull')">Турник</button>
         <button class="menu-btn" id="btn-chart-dip" onclick="setChartSource('dip')">Брусья</button>
@@ -80,6 +88,7 @@
         <button class="menu-btn" id="btn-chart-abs" onclick="setChartSource('abs')">Пресс</button>
         <button class="menu-btn" id="btn-chart-weight" onclick="setChartSource('weight')">Вес</button>
     </div>
+    
     <div class="chart-container">
         <canvas id="mainChart"></canvas>
     </div>
@@ -98,8 +107,8 @@
         { id: 'abs', name: 'Пресс', types: ['Планка', 'Колесо', 'Подъем ног'] }
     ];
 
-    let db = JSON.parse(localStorage.getItem('gym_v17_db')) || {};
-    let selectedTypes = JSON.parse(localStorage.getItem('gym_v17_selected')) || { dip: 'Классика', pull: 'Широкий', push: 'Классика', abs: 'Планка' };
+    let db = JSON.parse(localStorage.getItem('gym_v18_db')) || {};
+    let selectedTypes = JSON.parse(localStorage.getItem('gym_v18_selected')) || { dip: 'Классика', pull: 'Широкий', push: 'Классика', abs: 'Планка' };
     let today = new Date().toISOString().split('T')[0];
     let viewingDate = today;
     let chartInstance, restId, plankId, rTime = 60, pTime = 0, currentChartSource = 'pull';
@@ -127,9 +136,7 @@
         const wInputArea = document.getElementById('weight-input-area');
         const currentWeight = db[viewingDate]?.weight || '--';
         wDisplay.innerText = `${currentWeight} кг`;
-        
-        wInputArea.innerHTML = viewingDate === today ? 
-            `<input type="number" id="in-weight" step="0.1" placeholder="0.0"><button class="add-btn" onclick="saveWeight()">OK</button>` : '';
+        wInputArea.innerHTML = viewingDate === today ? `<input type="number" id="in-weight" step="0.1" placeholder="0.0"><button class="add-btn" onclick="saveWeight()">OK</button>` : '';
     }
 
     function saveWeight() {
@@ -137,7 +144,7 @@
         if(!val) return;
         if(!db[today]) db[today] = {};
         db[today].weight = val;
-        localStorage.setItem('gym_v17_db', JSON.stringify(db));
+        localStorage.setItem('gym_v18_db', JSON.stringify(db));
         renderWeight(); updateChart();
     }
 
@@ -159,7 +166,7 @@
     }
 
     function changeDate(key) { viewingDate = key; renderCalendar(); renderWeight(); renderExercises(); updateChart(); }
-    function setType(exId, type) { selectedTypes[exId] = type; localStorage.setItem('gym_v17_selected', JSON.stringify(selectedTypes)); renderExercises(); updateChart(); }
+    function setType(exId, type) { selectedTypes[exId] = type; localStorage.setItem('gym_v18_selected', JSON.stringify(selectedTypes)); renderExercises(); updateChart(); }
 
     function addSet(exId, manualVal = null) {
         const val = manualVal || parseInt(document.getElementById(`in-${exId}`).value);
@@ -168,7 +175,7 @@
         if(!db[today]) db[today] = {};
         if(!db[today][key]) db[today][key] = [];
         db[today][key].push(val);
-        localStorage.setItem('gym_v17_db', JSON.stringify(db));
+        localStorage.setItem('gym_v18_db', JSON.stringify(db));
         if(!manualVal) document.getElementById(`in-${exId}`).value = '';
         renderExercises(); updateChart();
     }
@@ -202,14 +209,31 @@
                             const valEl = document.getElementById('chart-current-val');
                             if (context.tooltip.opacity === 0) return;
                             const index = context.tooltip.dataPoints[0].dataIndex;
-                            const rawDate = last30[index];
                             const value = context.tooltip.dataPoints[0].raw;
-                            dateEl.innerText = new Date(rawDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
-                            valEl.innerText = value ? `${value} ${currentChartSource==='weight'?'кг':'(рекорд)'}` : 'Нет данных';
+                            dateEl.innerText = new Date(last30[index]).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+                            valEl.innerText = value ? `${value} ${currentChartSource==='weight'?'кг':''}` : 'Нет данных';
                         }
                     }
                 }, 
-                scales: { y: { display: false, beginAtZero: false }, x: { display: false } } 
+                scales: { 
+                    y: { 
+                        display: true, 
+                        position: 'left',
+                        grid: { color: 'rgba(255,255,255,0.05)' }, 
+                        ticks: { color: '#6b7280', font: {size: 10} }
+                    }, 
+                    x: { 
+                        display: true,
+                        grid: { display: false },
+                        ticks: { 
+                            color: '#6b7280', 
+                            font: {size: 8}, 
+                            autoSkip: true, 
+                            maxRotation: 0,
+                            callback: function(val, index) { return index % 5 === 0 ? last30[index].split('-')[2] : ''; }
+                        }
+                    } 
+                } 
             }
         });
     }
