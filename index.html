@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Gym Pro: Focus & Progress</title>
+    <title>Gym Interactive Pro</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --bg: #05070a; --card: #111827; --accent: #3b82f6; --success: #10b981; --text-dim: #6b7280; --error: #ef4444; }
@@ -15,7 +15,7 @@
         .day-box { height: 35px; border-radius: 10px; background: #1f2937; display: flex; align-items: center; justify-content: center; font-size: 13px; margin-top: 5px; font-weight: bold; }
         .day.active .day-box { background: var(--accent); box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
 
-        .ex-card { background: var(--card); border-radius: 24px; padding: 18px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); position: relative; }
+        .ex-card { background: var(--card); border-radius: 24px; padding: 18px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); }
         .category-title { color: var(--accent); font-size: 10px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; }
         
         .type-selector { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 12px; scrollbar-width: none; }
@@ -29,16 +29,16 @@
         .history-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; min-height: 20px; }
         .pill { background: rgba(59, 130, 246, 0.1); color: var(--accent); padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; border: 1px solid rgba(59, 130, 246, 0.2); }
 
-        .analytics-box { background: var(--card); border-radius: 24px; padding: 20px; margin-top: 25px; border: 1px solid rgba(255,255,255,0.1); }
-        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .scale-selector { display: flex; background: #1f2937; border-radius: 10px; padding: 2px; }
-        .scale-btn { background: none; border: none; color: var(--text-dim); font-size: 9px; padding: 5px 10px; border-radius: 8px; font-weight: bold; }
-        .scale-btn.active { background: var(--accent); color: white; }
+        /* СТИЛЬНЫЙ ГРАФИК */
+        .analytics-box { background: var(--card); border-radius: 24px; padding: 20px; margin-top: 25px; border: 1px solid rgba(255,255,255,0.1); position: relative; }
+        .chart-info { margin-bottom: 10px; height: 40px; }
+        #chart-current-val { font-size: 18px; font-weight: 800; color: white; }
+        #chart-current-date { font-size: 11px; color: var(--text-dim); text-transform: uppercase; }
 
         .chart-menu { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 15px; scrollbar-width: none; }
         .menu-btn { background: #1f2937; border: none; color: var(--text-dim); padding: 8px 14px; border-radius: 10px; font-size: 11px; font-weight: 700; white-space: nowrap; }
         .menu-btn.active { background: var(--accent); color: white; }
-        .chart-container { height: 200px; position: relative; }
+        .chart-container { height: 180px; position: relative; }
 
         .controls-row { position: fixed; bottom: 20px; left: 20px; right: 20px; display: flex; gap: 10px; z-index: 1000; }
         .timer-btn { flex: 1; padding: 18px; border-radius: 20px; border: none; font-weight: 800; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-size: 14px; }
@@ -55,12 +55,9 @@
 <div id="exercise-list"></div>
 
 <div class="analytics-box">
-    <div class="chart-header">
-        <div style="font-size: 11px; color: var(--accent); font-weight: bold;">АНАЛИТИКА ПРОГРЕССА</div>
-        <div class="scale-selector">
-            <button class="scale-btn active" id="s-30" onclick="setChartScale(30)">МЕСЯЦ</button>
-            <button class="scale-btn" id="s-180" onclick="setChartScale(180)">ПОЛГОДА</button>
-        </div>
+    <div class="chart-info">
+        <div id="chart-current-date">Проведи пальцем по графику</div>
+        <div id="chart-current-val">--</div>
     </div>
     <div class="chart-menu">
         <button class="menu-btn active" id="btn-chart-pull" onclick="setChartSource('pull')">Турник</button>
@@ -86,13 +83,11 @@
         { id: 'abs', name: 'Пресс', types: ['Планка', 'Колесо', 'Подъем ног'] }
     ];
 
-    let db = JSON.parse(localStorage.getItem('gym_v15_db')) || {};
-    let selectedTypes = JSON.parse(localStorage.getItem('gym_v15_selected')) || { dip: 'Классика', pull: 'Широкий', push: 'Классика', abs: 'Планка' };
+    let db = JSON.parse(localStorage.getItem('gym_v16_db')) || {};
+    let selectedTypes = JSON.parse(localStorage.getItem('gym_v16_selected')) || { dip: 'Классика', pull: 'Широкий', push: 'Классика', abs: 'Планка' };
     let today = new Date().toISOString().split('T')[0];
     let viewingDate = today;
-    let chartInstance, restId, plankId, rTime = 60, pTime = 0;
-    let currentChartSource = 'pull';
-    let currentChartScale = 30;
+    let chartInstance, restId, plankId, rTime = 60, pTime = 0, currentChartSource = 'pull';
 
     function init() {
         renderCalendar();
@@ -115,10 +110,8 @@
         const list = document.getElementById('exercise-list');
         list.innerHTML = program.map(ex => {
             const currentType = selectedTypes[ex.id];
-            const key = `${ex.id}_${currentType}`;
-            const sets = (db[viewingDate] && db[viewingDate][key]) || [];
+            const sets = (db[viewingDate] && db[viewingDate][`${ex.id}_${currentType}`]) || [];
             const isToday = viewingDate === today;
-            
             return `<div class="ex-card">
                 <div class="category-title">${ex.name}</div>
                 <div class="type-selector">${ex.types.map(t => `<button class="type-btn ${t === currentType ? 'active' : ''}" onclick="setType('${ex.id}', '${t}')">${t}</button>`).join('')}</div>
@@ -132,7 +125,7 @@
     }
 
     function changeDate(key) { viewingDate = key; renderCalendar(); renderExercises(); updateChart(); }
-    function setType(exId, type) { selectedTypes[exId] = type; localStorage.setItem('gym_v15_selected', JSON.stringify(selectedTypes)); renderExercises(); updateChart(); }
+    function setType(exId, type) { selectedTypes[exId] = type; localStorage.setItem('gym_v16_selected', JSON.stringify(selectedTypes)); renderExercises(); updateChart(); }
 
     function addSet(exId, manualVal = null) {
         const val = manualVal || parseInt(document.getElementById(`in-${exId}`).value);
@@ -141,45 +134,50 @@
         if(!db[today]) db[today] = {};
         if(!db[today][key]) db[today][key] = [];
         db[today][key].push(val);
-        localStorage.setItem('gym_v15_db', JSON.stringify(db));
+        localStorage.setItem('gym_v16_db', JSON.stringify(db));
         if(!manualVal) document.getElementById(`in-${exId}`).value = '';
         renderExercises(); updateChart();
-    }
-
-    function setChartScale(days) {
-        currentChartScale = days;
-        document.getElementById('s-30').classList.toggle('active', days === 30);
-        document.getElementById('s-180').classList.toggle('active', days === 180);
-        updateChart();
     }
 
     function setChartSource(src) { currentChartSource = src; document.querySelectorAll('.menu-btn').forEach(b => b.classList.toggle('active', b.id === `btn-chart-${src}`)); updateChart(); }
 
     function updateChart() {
         const ctx = document.getElementById('mainChart').getContext('2d');
-        const labels = [];
-        const dataSet = [];
+        const last30 = [];
+        for(let i=29; i>=0; i--) { let d=new Date(); d.setDate(d.getDate()-i); last30.push(d.toISOString().split('T')[0]); }
         
-        for(let i = currentChartScale - 1; i >= 0; i--) {
-            let d = new Date(); d.setDate(d.getDate() - i);
-            let key = d.toISOString().split('T')[0];
-            labels.push(d.getDate());
-            
-            const storageKey = `${currentChartSource}_${selectedTypes[currentChartSource]}`;
-            const dayData = (db[key] && db[key][storageKey]) || [];
-            dataSet.push(dayData.length > 0 ? Math.max(...dayData) : null);
-        }
+        const dataSet = last30.map(date => {
+            const key = `${currentChartSource}_${selectedTypes[currentChartSource]}`;
+            const dayData = (db[date] && db[date][key]) || [];
+            return dayData.length > 0 ? Math.max(...dayData) : null;
+        });
 
         if (chartInstance) chartInstance.destroy();
         chartInstance = new Chart(ctx, {
             type: 'line',
-            data: { labels: labels, datasets: [{ data: dataSet, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true, tension: 0.3, spanGaps: true, pointRadius: (c) => c.raw ? 2 : 0 }] },
+            data: { labels: last30, datasets: [{ data: dataSet, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true, tension: 0.3, spanGaps: true, pointRadius: (c) => c.raw ? 4 : 0, pointHoverRadius: 6, pointBackgroundColor: '#3b82f6' }] },
             options: { 
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } }, 
+                interaction: { intersect: false, mode: 'index' },
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        enabled: false,
+                        external: function(context) {
+                            const dateEl = document.getElementById('chart-current-date');
+                            const valEl = document.getElementById('chart-current-val');
+                            if (context.tooltip.opacity === 0) return;
+                            const date = context.tooltip.dataPoints[0].label;
+                            const value = context.tooltip.dataPoints[0].raw;
+                            const d = new Date(date);
+                            dateEl.innerText = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+                            valEl.innerText = value ? `${value} (рекорд)` : 'Нет данных';
+                        }
+                    }
+                }, 
                 scales: { 
-                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#6b7280', font: {size: 10} }, beginAtZero: true }, 
-                    x: { grid: { display: false }, ticks: { color: '#6b7280', font: {size: 8}, autoSkip: true, maxTicksLimit: 10 } } 
+                    y: { display: false, beginAtZero: true }, 
+                    x: { display: false } 
                 } 
             }
         });
