@@ -1,205 +1,39 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Gym System Pro</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        :root { --bg: #05070a; --card: #111827; --accent: #3b82f6; --success: #10b981; --warning: #f59e0b; --text-dim: #6b7280; }
-        body { background: var(--bg); color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 20px 20px 140px; }
-        
-        /* Блок расписания */
-        .schedule-banner { background: linear-gradient(90deg, #1e293b, #0f172a); border-radius: 20px; padding: 15px; margin-bottom: 20px; border-left: 5px solid var(--accent); }
-        .schedule-day { font-size: 12px; color: var(--accent); font-weight: 800; text-transform: uppercase; }
-        .schedule-task { font-size: 18px; font-weight: bold; margin-top: 4px; }
-
-        .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 20px; background: var(--card); padding: 15px; border-radius: 20px; }
-        .day { text-align: center; cursor: pointer; opacity: 0.4; }
-        .day.active { opacity: 1; }
-        .day-box { height: 35px; border-radius: 10px; background: #1f2937; display: flex; align-items: center; justify-content: center; font-size: 13px; margin-top: 5px; }
-        .day.active .day-box { background: var(--accent); box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
-
-        .ex-card { background: var(--card); border-radius: 24px; padding: 18px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); position: relative; }
-        .category-title { color: var(--accent); font-size: 10px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; }
-        
-        .type-selector { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 5px; scrollbar-width: none; }
-        .type-btn { background: #1f2937; border: none; color: var(--text-dim); padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 600; }
-        .type-btn.active { background: var(--accent); color: white; }
-
-        .ex-header { display: flex; justify-content: space-between; align-items: center; }
-        .input-group { display: flex; gap: 8px; }
-        input { background: #1f2937; border: 1px solid #374151; color: white; width: 50px; padding: 10px; border-radius: 12px; text-align: center; font-size: 16px; }
-        .add-btn { background: var(--accent); border: none; color: white; width: 44px; height: 44px; border-radius: 12px; font-weight: bold; font-size: 20px; }
-
-        .history-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
-        .pill { background: rgba(59, 130, 246, 0.1); color: var(--accent); padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; border: 1px solid rgba(59, 130, 246, 0.2); }
-
-        .analytics-box { background: var(--card); border-radius: 24px; padding: 20px; margin-top: 25px; border: 1px solid rgba(255,255,255,0.1); }
-        .chart-menu { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 15px; scrollbar-width: none; }
-        .menu-btn { background: #1f2937; border: none; color: var(--text-dim); padding: 8px 14px; border-radius: 10px; font-size: 11px; font-weight: 700; }
-        .menu-btn.active { background: var(--accent); color: white; }
-
-        #timer { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--accent); padding: 15px 35px; border-radius: 50px; display: none; font-weight: 800; z-index: 1000; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
-    </style>
-</head>
-<body>
-
-<div class="schedule-banner" id="today-plan">
-    <div class="schedule-day" id="plan-weekday">Загрузка...</div>
-    <div class="schedule-task" id="plan-title">Определяем план...</div>
-</div>
-
-<div class="week-grid" id="calendar"></div>
-
-<div class="ex-card" style="border: 1px solid var(--success);">
-    <div class="ex-header">
-        <div><h2 style="margin:0; font-size:16px;">⚖️ Вес тела</h2><span id="cur-w" style="font-size:12px; color:var(--text-dim)">--</span></div>
-        <div class="input-group">
-            <input type="number" id="w-in" step="0.1" placeholder="0.0" style="width:70px;">
-            <button class="add-btn" style="background:var(--success)" onclick="saveWeight()">OK</button>
-        </div>
-    </div>
-</div>
-
-<div id="exercise-list"></div>
-
-<div class="analytics-box">
-    <div class="chart-menu">
-        <button class="menu-btn active" onclick="setChartSource('Weight')">Вес</button>
-        <button class="menu-btn" onclick="setChartSource('dip')">Брусья</button>
-        <button class="menu-btn" onclick="setChartSource('pull')">Турник</button>
-        <button class="menu-btn" onclick="setChartSource('push')">Отжимания</button>
-    </div>
-    <canvas id="mainChart" height="180"></canvas>
-</div>
-
-<div id="timer">ОТДЫХ: <span id="t-val">60</span>с</div>
-
-<script>
-    const program = [
-        { id: 'dip', name: 'Брусья', types: ['Классика'] },
-        { id: 'pull', name: 'Турник', types: ['Широкий', 'Узкий (Бицепс)', 'Параллельный'] },
-        { id: 'push', name: 'Отжимания', types: ['Классика', 'Алмазные', 'Домиком'] },
-        { id: 'abs', name: 'Пресс', types: ['Колесо', 'Подъем ног'] }
-    ];
-
-    const weeklyPlan = {
-        0: { title: "Силовая А (Верх)", desc: "Брусья + Широкий Турник", color: "#3b82f6" }, // Вс
-        1: { title: "Активный отдых", desc: "Дорожка 20 мин + Растяжка", color: "#10b981" }, // Пн
-        2: { title: "Силовая Б (Тяга)", desc: "Бицепс Турник + Пресс", color: "#3b82f6" },   // Вт
-        3: { title: "Полный отдых", desc: "Восстановление и сон", color: "#6b7280" },        // Ср
-        4: { title: "Силовая С (Интенсив)", desc: "Параллельный + Плечи", color: "#3b82f6" },// Чт
-        5: { title: "Кардио День", desc: "Дорожка + Отжимания MAX", color: "#10b981" },     // Пт
-        6: { title: "Шаббат (Отдых)", desc: "Перерыв в тренировках", color: "#f59e0b" }       // Сб
+function renderExercises() {
+    const list = document.getElementById('exercise-list');
+    const dayOfWeek = new Date(viewingDate).getDay();
+    
+    // Определяем, какие упражнения и типы хватов нужны сегодня
+    const dailyConfig = {
+        0: { id: 'pull', type: 'Широкий', id2: 'dip', type2: 'Классика', id3: 'push', type3: 'Алмазные' }, // Силовая А
+        2: { id: 'pull', type: 'Узкий (Бицепс)', id2: 'abs', type2: 'Колесо', id3: 'push', type3: 'Домиком' }, // Силовая Б
+        4: { id: 'pull', type: 'Параллельный', id2: 'dip', type2: 'Классика', id3: 'abs', type2: 'Подъем ног' } // Силовая С
     };
 
-    let db = JSON.parse(localStorage.getItem('gym_v8_db')) || {};
-    let weights = JSON.parse(localStorage.getItem('gym_v8_weights')) || {};
-    let selectedTypes = JSON.parse(localStorage.getItem('gym_v8_selected')) || { dip: 'Классика', pull: 'Широкий', push: 'Классика', abs: 'Колесо' };
-    let today = new Date().toISOString().split('T')[0];
-    let viewingDate = today;
-    let chartInstance;
-    let currentChartSource = 'Weight';
+    const todayTarget = dailyConfig[dayOfWeek];
 
-    function init() {
-        updatePlanBanner();
-        renderCalendar();
-        renderExercises();
-        updateWeightDisplay();
-        updateChart();
-    }
+    list.innerHTML = program.map(ex => {
+        const currentType = selectedTypes[ex.id];
+        const storageKey = `${ex.id}_${currentType}`;
+        const sets = (db[viewingDate] && db[viewingDate][storageKey]) || [];
+        
+        // Проверка: является ли это упражнение целевым на сегодня
+        const isTarget = todayTarget && (todayTarget.id === ex.id || todayTarget.id2 === ex.id || todayTarget.id3 === ex.id);
+        const opacity = isTarget ? '1' : '0.3'; // Нецелевые упражнения станут бледными
 
-    function updatePlanBanner() {
-        const d = new Date(viewingDate).getDay();
-        const plan = weeklyPlan[d];
-        const names = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
-        document.getElementById('plan-weekday').innerText = names[d];
-        document.getElementById('plan-title').innerText = plan.title;
-        document.getElementById('today-plan').style.borderLeftColor = plan.color;
-    }
-
-    function renderCalendar() {
-        const cal = document.getElementById('calendar');
-        const days = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
-        const now = new Date(); cal.innerHTML = '';
-        for(let i=0; i<7; i++) {
-            let d = new Date(); d.setDate(now.getDate() - now.getDay() + i);
-            let key = d.toISOString().split('T')[0];
-            cal.innerHTML += `<div class="day ${key === viewingDate ? 'active' : ''}" onclick="changeDate('${key}')"><div class="day-name">${days[i]}</div><div class="day-box">${d.getDate()}</div></div>`;
-        }
-    }
-
-    function renderExercises() {
-        const list = document.getElementById('exercise-list');
-        list.innerHTML = program.map(ex => {
-            const currentType = selectedTypes[ex.id];
-            const storageKey = `${ex.id}_${currentType}`;
-            const sets = (db[viewingDate] && db[viewingDate][storageKey]) || [];
-            return `<div class="ex-card">
-                <div class="category-title">${ex.name}</div>
-                <div class="type-selector">${ex.types.map(t => `<button class="type-btn ${t === currentType ? 'active' : ''}" onclick="setType('${ex.id}', '${t}')">${t}</button>`).join('')}</div>
-                <div class="ex-header">
-                    <div style="font-size:14px; font-weight:bold;">${currentType}</div>
-                    ${viewingDate === today ? `<div class="input-group"><input type="number" id="in-${ex.id}" placeholder="0" inputmode="numeric"><button class="add-btn" onclick="addSet('${ex.id}')">+</button></div>` : ''}
+        return `<div class="ex-card" style="opacity: ${opacity}; border: ${sets.length >= 4 ? '2px solid var(--success)' : '1px solid rgba(255,255,255,0.05)'}">
+            ${sets.length >= 4 ? '<div style="position:absolute; top:10px; right:15px; color:var(--success); font-size:10px; font-weight:bold;">✅ НОРМА ВЫПОЛНЕНА</div>' : ''}
+            <div class="category-title">${ex.name}</div>
+            <div class="type-selector">
+                ${ex.types.map(t => `<button class="type-btn ${t === currentType ? 'active' : ''}" onclick="setType('${ex.id}', '${t}')">${t}</button>`).join('')}
+            </div>
+            <div class="ex-header">
+                <div style="font-size:14px; font-weight:bold;">${currentType}</div>
+                <div class="input-group">
+                    <input type="number" id="in-${ex.id}" placeholder="0">
+                    <button class="add-btn" onclick="addSet('${ex.id}')">+</button>
                 </div>
-                <div class="history-pills">${sets.map(s => `<div class="pill">${s}</div>`).join('') || '<span style="color:#374151; font-size:12px;">Пусто</span>'}</div>
-            </div>`;
-        }).join('');
-    }
-
-    function changeDate(key) { viewingDate = key; renderCalendar(); renderExercises(); updateWeightDisplay(); updatePlanBanner(); updateChart(); }
-
-    function setType(exId, type) { selectedTypes[exId] = type; localStorage.setItem('gym_v8_selected', JSON.stringify(selectedTypes)); renderExercises(); updateChart(); }
-    
-    function setChartSource(source) { 
-        currentChartSource = source; 
-        document.querySelectorAll('.menu-btn').forEach(b => b.classList.toggle('active', b.innerText.toLowerCase().includes(source === 'Weight' ? 'вес' : source === 'dip' ? 'брус' : source === 'pull' ? 'турн' : 'отжим')));
-        updateChart(); 
-    }
-
-    function addSet(exId) {
-        const inp = document.getElementById(`in-${exId}`);
-        const val = parseInt(inp.value); if(!val) return;
-        const storageKey = `${exId}_${selectedTypes[exId]}`;
-        if(!db[today]) db[today] = {}; if(!db[today][storageKey]) db[today][storageKey] = [];
-        db[today][storageKey].push(val); localStorage.setItem('gym_v8_db', JSON.stringify(db));
-        inp.value = ''; renderExercises(); updateChart(); startTimer();
-    }
-
-    function saveWeight() {
-        const val = document.getElementById('w-in').value; if(!val) return;
-        weights[today] = parseFloat(val); localStorage.setItem('gym_v8_weights', JSON.stringify(weights));
-        updateWeightDisplay(); updateChart(); document.getElementById('w-in').value = '';
-    }
-
-    function updateWeightDisplay() { document.getElementById('cur-w').innerText = (weights[viewingDate] || '--') + ' кг'; }
-
-    function updateChart() {
-        const ctx = document.getElementById('mainChart').getContext('2d');
-        const last7Days = []; for(let i=6; i>=0; i--) { let d = new Date(); d.setDate(d.getDate() - i); last7Days.push(d.toISOString().split('T')[0]); }
-        let dataPoints = currentChartSource === 'Weight' ? last7Days.map(date => weights[date] || null) : last7Days.map(date => {
-            const storageKey = `${currentChartSource}_${selectedTypes[currentChartSource]}`;
-            const dayData = (db[date] && db[date][storageKey]) || [];
-            return dayData.length > 0 ? Math.max(...dayData) : 0;
-        });
-
-        if (chartInstance) chartInstance.destroy();
-        chartInstance = new Chart(ctx, {
-            type: 'line',
-            data: { labels: last7Days.map(d => d.split('-')[2]), datasets: [{ data: dataPoints, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', borderWidth: 3, tension: 0.3, fill: true, spanGaps: true }] },
-            options: { plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#1f2937' }, ticks: { color: '#6b7280' } }, x: { grid: { display: false }, ticks: { color: '#6b7280' } } } }
-        });
-    }
-
-    let tId;
-    function startTimer() {
-        clearInterval(tId); const bar = document.getElementById('timer'); const val = document.getElementById('t-val');
-        let l = 60; bar.style.display = 'block'; val.innerText = l;
-        tId = setInterval(() => { l--; val.innerText = l; if(l<=0) { clearInterval(tId); bar.style.display='none'; } }, 1000);
-    }
-
-    init();
-</script>
-</body>
-</html>
+            </div>
+            <div class="history-pills">${sets.map(s => `<div class="pill">${s}</div>`).join('')}</div>
+        </div>`;
+    }).join('');
+}
