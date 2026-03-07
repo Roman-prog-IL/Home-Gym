@@ -43,7 +43,6 @@
         
         .add-btn { background: var(--blue); border: none; color: white; width: 45px; height: 45px; border-radius: 14px; font-size: 20px; font-weight: bold; }
 
-        /* Контейнер для цифры и крестика */
         .sets-container { margin-top: 15px; display: flex; flex-wrap: wrap; gap: 12px; }
         .pill-wrapper { position: relative; display: inline-block; }
         
@@ -84,7 +83,7 @@
     <div class="app-logo"></div>
     <div>
         <h1 style="margin:0; font-size:20px;">Home Gym</h1>
-        <p style="margin:0; font-size:10px; color:var(--accent); font-weight:700;">BASIC WORKOUT</p>
+        <p style="margin:0; font-size:10px; color:var(--accent); font-weight:700;">PRO TRACKER</p>
     </div>
 </div>
 
@@ -123,14 +122,16 @@
 </div>
 
 <script>
+    // Разделили Пресс и Планку
     const exercises = [
         { id: 'pull', name: 'Турник' },
         { id: 'dip', name: 'Брусья' },
         { id: 'push', name: 'Отжимания' },
-        { id: 'abs', name: 'Пресс / Планка' }
+        { id: 'abs', name: 'Пресс' },
+        { id: 'plank', name: 'Планка (сек)' }
     ];
 
-    let db = JSON.parse(localStorage.getItem('homegym_db_v29')) || {};
+    let db = JSON.parse(localStorage.getItem('homegym_db_v30')) || {};
     let today = new Date().toISOString().split('T')[0];
     let viewingDate = today;
     let chartInstance, currentChartId = 'pull', restTime = 60, restId, pTime = 0, plankId;
@@ -161,19 +162,22 @@
         const list = document.getElementById('exercise-list');
         list.innerHTML = exercises.map(ex => {
             const sets = (db[viewingDate] && db[viewingDate][ex.id]) || [];
+            // Для планки убираем ручной ввод, так как она идет через таймер
+            const showInput = viewingDate === today && ex.id !== 'plank';
+            
             return `
                 <div class="ex-card">
                     <div class="category-title">${ex.name}</div>
-                    ${viewingDate === today ? `
+                    ${showInput ? `
                         <div class="input-row">
                             <input type="number" id="in-${ex.id}" placeholder="+" inputmode="numeric">
                             <button class="add-btn" onclick="addSet('${ex.id}')">+</button>
                         </div>
-                    ` : ''}
+                    ` : (ex.id === 'plank' && viewingDate === today ? '<p style="font-size:12px; color:var(--text-dim); margin:0;">Используй кнопку внизу для записи</p>' : '')}
                     <div class="sets-container">
                         ${sets.map((s, idx) => `
                             <div class="pill-wrapper">
-                                <div class="pill">${s}</div>
+                                <div class="pill">${s}${ex.id === 'plank' ? 'с' : ''}</div>
                                 ${viewingDate === today ? `<button class="delete-btn" onclick="removeSet('${ex.id}', ${idx})">×</button>` : ''}
                             </div>
                         `).join('')}
@@ -200,7 +204,6 @@
         renderExercises(); updateChart();
     }
 
-    // НОВАЯ ФУНКЦИЯ ДЛЯ УДАЛЕНИЯ
     function removeSet(exId, index) {
         if(confirm('Удалить этот подход?')) {
             db[viewingDate][exId].splice(index, 1);
@@ -275,10 +278,12 @@
             clearInterval(plankId); plankId = null; btn.classList.remove('t-active');
             if(pTime > 0) {
                 if(!db[today]) db[today] = {};
-                if(!db[today]['abs']) db[today]['abs'] = [];
-                db[today]['abs'].push(pTime); saveDB(); renderExercises(); updateChart();
+                if(!db[today]['plank']) db[today]['plank'] = []; // Теперь записываем в 'plank'
+                db[today]['plank'].push(pTime); 
+                saveDB(); renderExercises(); updateChart();
             }
             pTime = 0; document.getElementById('p-val').innerText = 0;
+            btn.innerHTML = 'ПЛАНКА: <span id="p-val">0</span>с';
         } else { 
             btn.classList.add('t-active'); 
             plankId = setInterval(() => { pTime++; document.getElementById('p-val').innerText = pTime; }, 1000); 
@@ -286,7 +291,7 @@
     }
 
     function changeDate(key) { viewingDate = key; renderCalendar(); renderWeight(); renderExercises(); }
-    function saveDB() { localStorage.setItem('homegym_db_v29', JSON.stringify(db)); }
+    function saveDB() { localStorage.setItem('homegym_db_v30', JSON.stringify(db)); }
     
     function exportData() {
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db));
