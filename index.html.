@@ -3,54 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Home Gym OS</title>
+    <title>GYM OS</title>
     <style>
-        body { background-color: #0f172a; color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 400px; }
-        h1 { color: #3b82f6; font-size: 32px; margin: 0; }
-        .date { color: #94a3b8; font-size: 14px; margin-bottom: 20px; }
+        body { background: #0f172a; color: white; font-family: sans-serif; display: flex; justify-content: center; padding: 20px; margin: 0; }
+        .app { width: 100%; max-width: 400px; }
+        .status-ready { color: #22c55e; font-weight: bold; margin-bottom: 20px; text-align: center; border: 1px solid #22c55e; padding: 10px; border-radius: 10px; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .card { background: #1e293b; padding: 20px; border-radius: 20px; border-left: 6px solid; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .blue { border-color: #3b82f6; } .orange { border-color: #f97316; }
-        .yellow { border-color: #eab308; } .green { border-color: #22c55e; }
-        .val { font-size: 32px; font-weight: bold; display: block; }
-        .lab { font-size: 11px; color: #94a3b8; font-weight: bold; text-transform: uppercase; }
-        .water-box { background: #1e293b; padding: 20px; border-radius: 20px; margin-top: 20px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #334155; }
-        button { background: #334155; color: #3b82f6; border: none; padding: 10px 15px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .card { background: #1e293b; padding: 20px; border-radius: 20px; border-left: 6px solid #3b82f6; }
+        .val { font-size: 30px; font-weight: bold; display: block; }
+        .label { font-size: 12px; color: #94a3b8; }
+        .water { margin-top: 20px; background: #1e293b; padding: 20px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; }
+        button { background: #334155; color: #3b82f6; border: none; padding: 10px 15px; border-radius: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1 id="day-name">Загрузка...</h1>
-        <div class="date" id="full-date">Синхронизация...</div>
-
+    <div class="app">
+        <div class="status-ready">СИСТЕМА ГОТОВА К ВОСКРЕСЕНЬЮ</div>
+        <h1 id="day" style="margin: 0 0 20px 0;">Загрузка...</h1>
+        
         <div class="grid">
-            <div class="card blue"><span class="val">0</span><span class="lab">БРУСЬЯ</span></div>
-            <div class="card orange"><span class="val">0</span><span class="lab">ТУРНИК</span></div>
-            <div class="card yellow"><span class="val">0.0</span><span class="lab">ДОРОЖКА</span></div>
-            <div class="card green"><span class="val">0</span><span class="lab">ПРИСЕДЫ</span></div>
+            <div class="card"><span class="val">0</span><span class="label">БРУСЬЯ</span></div>
+            <div class="card" style="border-color: #f97316;"><span class="val">0</span><span class="label">ТУРНИК</span></div>
         </div>
 
-        <div class="water-box">
-            <span>💧 ВОДА: <strong id="w">0.0</strong>л</span>
-            <div>
-                <button onclick="addW(0.1)">+0.1</button>
-                <button onclick="addW(0.3)">+0.3</button>
-            </div>
+        <div class="water">
+            <span>ВОДА: <strong id="w">0.0</strong>л</span>
+            <button onclick="document.getElementById('w').innerText=(parseFloat(document.getElementById('w').innerText)+0.1).toFixed(1)">+0.1</button>
         </div>
     </div>
-
     <script>
-        let water = 0.0;
-        function addW(v) {
-            water = Math.round((water + v) * 10) / 10;
-            document.getElementById('w').innerText = water.toFixed(1);
-        }
-        const d = new Date();
         const days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
-        const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
-        document.getElementById('day-name').innerText = days[d.getDay()];
-        document.getElementById('full-date').innerText = d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear() + ' г.';
+        document.getElementById('day').innerText = days[new Date().getDay()];
     </script>
 </body>
 </html>
