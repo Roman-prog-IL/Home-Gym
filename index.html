@@ -3,49 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Home Gym</title>
+    <title>Gym OS - Тренировка</title>
     <style>
-        body { background: #0f172a; color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 400px; }
-        .status { color: #22c55e; font-size: 12px; font-weight: bold; margin-bottom: 10px; display: block; }
-        h1 { font-size: 32px; margin: 0; color: #3b82f6; }
-        .date { color: #94a3b8; font-size: 14px; margin-bottom: 25px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .card { background: #1e293b; padding: 20px; border-radius: 20px; border-left: 6px solid; }
-        .blue { border-color: #3b82f6; } .orange { border-color: #f97316; }
-        .val { font-size: 32px; font-weight: bold; display: block; }
-        .lab { font-size: 11px; color: #94a3b8; font-weight: bold; text-transform: uppercase; }
-        .water-box { background: #1e293b; padding: 20px; border-radius: 20px; margin-top: 25px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #334155; }
-        button { background: #334155; color: #3b82f6; border: none; padding: 12px 18px; border-radius: 12px; font-weight: bold; cursor: pointer; }
+        :root { --bg: #0f172a; --card: #1e293b; --accent: #3b82f6; --success: #22c55e; }
+        body { background: var(--bg); color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 20px; padding-bottom: 100px; }
+        .header { margin-bottom: 20px; }
+        .date { color: #94a3b8; font-size: 14px; }
+        h1 { margin: 5px 0; font-size: 28px; color: var(--accent); }
+        
+        /* Таймер отдыха */
+        #rest-timer { 
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: var(--accent); padding: 15px 40px; border-radius: 50px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: none; text-align: center; z-index: 100;
+        }
+
+        .grid { display: grid; gap: 15px; }
+        .card { background: var(--card); border-radius: 20px; padding: 18px; border-left: 6px solid var(--accent); position: relative; }
+        .card.done { border-left-color: var(--success); opacity: 0.8; }
+        
+        .ex-title { font-size: 18px; font-weight: bold; margin-bottom: 5px; display: block; }
+        .ex-info { color: #94a3b8; font-size: 13px; }
+        
+        .sets-dots { display: flex; gap: 8px; margin-top: 15px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; background: #334155; }
+        .dot.active { background: var(--success); box-shadow: 0 0 8px var(--success); }
+
+        .btn-plus { 
+            position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
+            background: var(--accent); border: none; width: 50px; height: 50px;
+            border-radius: 15px; color: white; font-size: 24px; font-weight: bold;
+        }
+        .btn-plus:disabled { background: #334155; color: #64748b; }
+
+        .treadmill { grid-column: 1 / -1; background: #1e293b; border-left-color: #eab308; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <span class="status">● СИСТЕМА АКТИВНА</span>
-        <h1 id="day-name">Загрузка...</h1>
-        <div class="date" id="full-date">...</div>
 
-        <div class="grid">
-            <div class="card blue"><span class="val">0</span><span class="lab">БРУСЬЯ</span></div>
-            <div class="card orange"><span class="val">0</span><span class="lab">ТУРНИК</span></div>
-        </div>
+<div class="header">
+    <div class="date" id="current-date"></div>
+    <h1 id="workout-name">Силовая А</h1>
+</div>
 
-        <div class="water-box">
-            <span>💧 ВОДА: <strong id="w">0.0</strong>л</span>
-            <button onclick="addW(0.1)">+0.1</button>
-        </div>
+<div id="rest-timer">
+    <span style="font-size: 12px; display: block; opacity: 0.8;">ОТДЫХ</span>
+    <span id="timer-val" style="font-size: 24px; font-weight: bold;">60</span> сек
+</div>
+
+<div class="grid">
+    <div class="card" id="ex1">
+        <span class="ex-title">1. Брусья</span>
+        <span class="ex-info">Цель: 5 подходов по 12 раз</span>
+        <div class="sets-dots" id="dots1"></div>
+        <button class="btn-plus" onclick="doSet(1, 5)">+</button>
     </div>
 
-    <script>
-        function addW(v) {
-            let e = document.getElementById('w');
-            e.innerText = (parseFloat(e.innerText) + v).toFixed(1);
-        }
+    <div class="card" id="ex2" style="border-left-color: #f97316;">
+        <span class="ex-title">2. Турник</span>
+        <span class="ex-info">Цель: 4 подхода по 8 раз</span>
+        <div class="sets-dots" id="dots2"></div>
+        <button class="btn-plus" onclick="doSet(2, 4)">+</button>
+    </div>
+
+    <div class="card" id="ex3" style="border-left-color: #22c55e;">
+        <span class="ex-title">3. Отжимания</span>
+        <span class="ex-info">Цель: 4 подхода по 20 раз</span>
+        <div class="sets-dots" id="dots3"></div>
+        <button class="btn-plus" onclick="doSet(3, 4)">+</button>
+    </div>
+
+    <div class="card" id="ex4" style="border-left-color: #8b5cf6;">
+        <span class="ex-title">4. Пресс</span>
+        <span class="ex-info">Колесо: 4 подхода по 15 раз</span>
+        <div class="sets-dots" id="dots4"></div>
+        <button class="btn-plus" onclick="doSet(4, 4)">+</button>
+    </div>
+
+    <div class="card treadmill">
+        <span class="ex-title">5. Беговая дорожка</span>
+        <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 14px; color: #94a3b8;">
+            <span>Скорость: <b>6.5</b></span>
+            <span>Пульс: <b>130</b></span>
+            <span>Время: <b>20 мин</b></span>
+        </div>
+    </div>
+</div>
+
+<script>
+    const state = JSON.parse(localStorage.getItem('gym_state')) || { 1:0, 2:0, 3:0, 4:0 };
+    let timerInterval;
+
+    function init() {
         const d = new Date();
-        const days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
-        const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
-        document.getElementById('day-name').innerText = days[d.getDay()];
-        document.getElementById('full-date').innerText = d.getDate() + ' ' + months[d.getMonth()];
-    </script>
+        const months = ['марта', 'апреля', 'мая']; // упрощено
+        document.getElementById('current-date').innerText = d.getDate() + ' ' + months[d.getMonth() - 2];
+        
+        for(let i=1; i<=4; i++) renderDots(i);
+    }
+
+    function renderDots(id) {
+        const container = document.getElementById('dots'+id);
+        const max = id === 1 ? 5 : 4;
+        container.innerHTML = '';
+        for(let j=0; j<max; j++) {
+            const dot = document.createElement('div');
+            dot.className = `dot ${j < state[id] ? 'active' : ''}`;
+            container.appendChild(dot);
+        }
+    }
+
+    function doSet(id, max) {
+        if(state[id] < max) {
+            state[id]++;
+            localStorage.setItem('gym_state', JSON.stringify(state));
+            renderDots(id);
+            startRest();
+        }
+    }
+
+    function startRest() {
+        clearInterval(timerInterval);
+        const timerEl = document.getElementById('rest-timer');
+        const valEl = document.getElementById('timer-val');
+        let timeLeft = 60;
+        
+        timerEl.style.display = 'block';
+        valEl.innerText = timeLeft;
+
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            valEl.innerText = timeLeft;
+            if(timeLeft <= 0) {
+                clearInterval(timerInterval);
+                timerEl.style.display = 'none';
+                window.navigator.vibrate(200); // Вибрация в конце
+            }
+        }, 1000);
+    }
+
+    init();
+</script>
+
 </body>
 </html>
