@@ -3,32 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Gym Analytics Pro</title>
+    <title>Gym Analytics + Scale</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --bg: #05070a; --card: #111827; --accent: #3b82f6; --success: #10b981; --text-dim: #6b7280; }
-        body { background: var(--bg); color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 20px 20px 120px; }
+        body { background: var(--bg); color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 20px 20px 140px; }
         
-        /* Календарь */
         .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 25px; background: var(--card); padding: 15px; border-radius: 20px; }
-        .day { text-align: center; cursor: pointer; }
-        .day-name { font-size: 10px; color: var(--text-dim); text-transform: uppercase; }
+        .day { text-align: center; cursor: pointer; opacity: 0.5; }
+        .day.active { opacity: 1; }
         .day-box { height: 35px; border-radius: 10px; background: #1f2937; display: flex; align-items: center; justify-content: center; font-size: 14px; margin-top: 5px; }
         .day.active .day-box { background: var(--accent); box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
 
-        /* Карточки */
         .ex-card { background: var(--card); border-radius: 24px; padding: 20px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); }
-        .ex-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        h2 { margin: 0; font-size: 18px; letter-spacing: -0.5px; }
+        .ex-header { display: flex; justify-content: space-between; align-items: center; }
+        .input-group { display: flex; gap: 8px; }
+        input { background: #1f2937; border: 1px solid #374151; color: white; width: 45px; padding: 10px 5px; border-radius: 10px; text-align: center; font-size: 16px; }
+        .add-btn { background: var(--accent); border: none; color: white; width: 40px; height: 40px; border-radius: 10px; font-weight: bold; }
+
+        .history-pills { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 12px; }
+        .pill { background: rgba(59, 130, 246, 0.1); color: var(--accent); padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; border: 1px solid rgba(59, 130, 246, 0.2); }
+
+        /* Блок Весов */
+        .scale-card { background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid var(--accent); }
         
-        .history-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; min-height: 20px; }
-        .pill { background: #1f2937; color: var(--accent); padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; border: 1px solid rgba(59, 130, 246, 0.2); }
+        /* График */
+        .chart-container { background: var(--card); border-radius: 24px; padding: 15px; margin-top: 20px; border: 1px solid rgba(255,255,255,0.05); }
 
-        /* Ввод */
-        .input-group { display: flex; gap: 10px; align-items: center; }
-        input { background: #1f2937; border: 1px solid #374151; color: white; width: 50px; padding: 12px 5px; border-radius: 12px; text-align: center; font-size: 18px; font-weight: bold; }
-        .add-btn { background: var(--accent); border: none; color: white; width: 45px; height: 45px; border-radius: 12px; font-size: 20px; font-weight: bold; }
-
-        /* Таймер */
         #timer { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--accent); padding: 12px 30px; border-radius: 50px; display: none; font-weight: bold; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
     </style>
 </head>
@@ -36,24 +37,41 @@
 
 <div class="week-grid" id="calendar"></div>
 
-<header style="margin-bottom: 20px;">
-    <h1 id="view-date" style="font-size: 24px; margin: 0;">Сегодня</h1>
-    <p style="color: var(--text-dim); font-size: 14px; margin: 5px 0;">Записывай каждый подход</p>
-</header>
+<div class="ex-card scale-card">
+    <div class="ex-header">
+        <div>
+            <h2 style="margin:0; font-size:18px;">⚖️ Вес тела</h2>
+            <span id="last-weight" style="font-size:12px; color:var(--text-dim)">Не записан</span>
+        </div>
+        <div class="input-group">
+            <input type="number" id="weight-in" step="0.1" placeholder="0.0" style="width:60px;">
+            <button class="add-btn" style="background:var(--success)" onclick="saveWeight()">OK</button>
+        </div>
+    </div>
+</div>
 
 <div id="exercise-list"></div>
+
+<div class="chart-container">
+    <h3 style="margin: 0 0 15px 0; font-size: 14px; color: var(--text-dim); text-transform: uppercase;">Тренд повторений</h3>
+    <canvas id="progressChart"></canvas>
+</div>
 
 <div id="timer">ОТДЫХ: <span id="t-val">60</span>с</div>
 
 <script>
     const exercises = ['Брусья', 'Турник', 'Отжимания', 'Пресс'];
-    let db = JSON.parse(localStorage.getItem('gym_db_v3')) || {};
+    let db = JSON.parse(localStorage.getItem('gym_db_v4')) || {};
+    let weights = JSON.parse(localStorage.getItem('gym_weights')) || {};
     let today = new Date().toISOString().split('T')[0];
     let viewingDate = today;
+    let myChart;
 
     function init() {
         renderCalendar();
         renderExercises();
+        updateWeightInfo();
+        renderChart();
     }
 
     function renderCalendar() {
@@ -87,9 +105,7 @@
                             <button class="add-btn" onclick="addSet('${ex}')">+</button>
                         </div>` : ''}
                     </div>
-                    <div class="history-pills">
-                        ${sets.map(s => `<div class="pill">${s}</div>`).join('') || '<span style="color:#374151; font-size:12px;">Нет записей</span>'}
-                    </div>
+                    <div class="history-pills">${sets.map(s => `<div class="pill">${s}</div>`).join('') || '<span style="color:#374151; font-size:12px;">Нет записей</span>'}</div>
                 </div>`;
         }).join('');
     }
@@ -98,24 +114,70 @@
         const inp = document.getElementById(`in-${name}`);
         const val = parseInt(inp.value);
         if(!val) return;
-
         if(!db[today]) db[today] = {};
         if(!db[today][name]) db[today][name] = [];
-        
         db[today][name].push(val);
-        localStorage.setItem('gym_db_v3', JSON.stringify(db));
-        
+        localStorage.setItem('gym_db_v4', JSON.stringify(db));
         inp.value = '';
         renderExercises();
+        renderChart(); // Обновляем график
         startTimer();
-        if(window.navigator.vibrate) window.navigator.vibrate(50);
+    }
+
+    function saveWeight() {
+        const val = document.getElementById('weight-in').value;
+        if(!val) return;
+        weights[today] = val;
+        localStorage.setItem('gym_weights', JSON.stringify(weights));
+        updateWeightInfo();
+        document.getElementById('weight-in').value = '';
+    }
+
+    function updateWeightInfo() {
+        const w = weights[viewingDate] || '--';
+        document.getElementById('last-weight').innerText = `Вес: ${w} кг`;
     }
 
     function changeDate(key) {
         viewingDate = key;
-        document.getElementById('view-date').innerText = key === today ? 'Сегодня' : key;
         renderCalendar();
         renderExercises();
+        updateWeightInfo();
+    }
+
+    function renderChart() {
+        const ctx = document.getElementById('progressChart').getContext('2d');
+        const labels = Object.keys(db).sort().slice(-7); // Последние 7 дней
+        const dataPoints = labels.map(date => {
+            let total = 0;
+            Object.values(db[date]).forEach(exArray => {
+                total += exArray.reduce((a, b) => a + b, 0);
+            });
+            return total;
+        });
+
+        if (myChart) myChart.destroy();
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels.map(l => l.split('-')[2]), // Только числа
+                datasets: [{
+                    label: 'Всего повторов за день',
+                    data: dataPoints,
+                    borderColor: '#3b82f6',
+                    tension: 0.4,
+                    fill: true,
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)'
+                }]
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                scales: { 
+                    y: { grid: { color: '#1f2937' }, ticks: { color: '#6b7280' } },
+                    x: { grid: { display: false }, ticks: { color: '#6b7280' } }
+                }
+            }
+        });
     }
 
     let tId;
@@ -126,7 +188,7 @@
         let l = 60; bar.style.display = 'block'; val.innerText = l;
         tId = setInterval(() => {
             l--; val.innerText = l;
-            if(l<=0) { clearInterval(tId); bar.style.display='none'; if(window.navigator.vibrate) window.navigator.vibrate([100,50,100]); }
+            if(l<=0) { clearInterval(tId); bar.style.display='none'; }
         }, 1000);
     }
 
