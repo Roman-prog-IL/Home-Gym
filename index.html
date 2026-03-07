@@ -4,47 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Gym Elite</title>
+    
     <link rel="apple-touch-icon" href="https://i.postimg.cc/qM6p6JgN/gym-icon.png">
-    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="icon" type="image/png" href="https://i.postimg.cc/qM6p6JgN/gym-icon.png">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Gym Elite">
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { 
             --bg: #000000; 
             --card: #0a0a0c; 
-            --accent: #22c55e; /* Зеленый неон как на иконке */
+            --accent: #22c55e; 
             --blue: #3b82f6;
             --text-dim: #52525b;
-            --glass: rgba(255, 255, 255, 0.03);
         }
         
         body { 
-            background: var(--bg); 
-            color: white; 
-            font-family: -apple-system, system-ui, sans-serif; 
-            margin: 0; 
-            padding: 20px 16px 160px;
+            background: var(--bg); color: white; 
+            font-family: -apple-system, sans-serif; 
+            margin: 0; padding: 20px 16px 160px;
             -webkit-font-smoothing: antialiased;
         }
 
-        /* Шапка с новой иконкой */
-        .app-header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 25px;
-            padding: 10px 5px;
-        }
+        /* Шапка с лого */
+        .app-header { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; padding: 10px 5px; }
         .app-logo {
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
+            width: 55px; height: 55px; border-radius: 14px;
             background: url('https://i.postimg.cc/qM6p6JgN/gym-icon.png') center/cover;
-            box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
         }
-        .app-title h1 { margin: 0; font-size: 20px; font-weight: 900; letter-spacing: -0.5px; }
-        .app-title p { margin: 0; font-size: 12px; color: var(--accent); font-weight: 600; text-transform: uppercase; }
+        .app-title h1 { margin: 0; font-size: 22px; font-weight: 900; letter-spacing: -0.5px; }
+        .app-title p { margin: 0; font-size: 11px; color: var(--accent); font-weight: 700; text-transform: uppercase; }
 
         /* Календарь */
         .week-grid { 
@@ -52,26 +45,22 @@
             margin-bottom: 20px; background: var(--card); padding: 12px; border-radius: 20px;
             border: 1px solid rgba(255,255,255,0.05);
         }
-        .day { text-align: center; opacity: 0.4; transition: 0.3s; }
+        .day { text-align: center; opacity: 0.4; }
         .day.active { opacity: 1; }
         .day-box { 
             height: 40px; border-radius: 12px; background: #18181b; 
             display: flex; align-items: center; justify-content: center; 
             font-size: 15px; font-weight: 700; margin-top: 5px;
         }
-        .day.active .day-box { 
-            background: var(--accent); color: black;
-            box-shadow: 0 0 15px rgba(34, 197, 94, 0.5);
-        }
+        .day.active .day-box { background: var(--accent); color: black; box-shadow: 0 0 15px rgba(34, 197, 94, 0.4); }
 
         /* Карточки */
         .weight-card, .ex-card, .analytics-box { 
-            background: var(--card); border-radius: 24px; padding: 20px; 
+            background: var(--card); border-radius: 26px; padding: 20px; 
             margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.05);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        .category-title { color: var(--accent); font-size: 10px; font-weight: 800; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 1px; }
+        .category-title { color: var(--accent); font-size: 10px; font-weight: 800; text-transform: uppercase; margin-bottom: 12px; }
         
         .type-selector { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 15px; scrollbar-width: none; }
         .type-btn { 
@@ -81,8 +70,6 @@
         .type-btn.active { background: white; color: black; }
 
         .ex-header { display: flex; justify-content: space-between; align-items: center; }
-        .ex-name { font-size: 18px; font-weight: 800; }
-
         input { 
             background: #18181b; border: 1px solid #27272a; color: white; 
             width: 60px; padding: 12px; border-radius: 14px; text-align: center; font-size: 18px; font-weight: 700;
@@ -95,22 +82,17 @@
         .history-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 15px; }
         .pill { background: rgba(34, 197, 94, 0.1); color: var(--accent); padding: 6px 12px; border-radius: 10px; font-size: 14px; font-weight: 700; }
 
-        /* График */
-        #chart-current-val { font-size: 24px; font-weight: 900; color: white; }
-        #chart-current-date { font-size: 12px; color: var(--text-dim); }
-        .chart-container { height: 200px; margin-top: 20px; touch-action: pan-x; }
+        /* Аналитика */
+        .chart-container { height: 210px; margin-top: 20px; touch-action: pan-x; }
 
-        /* Кнопки управления */
+        /* Кнопки */
         .controls-row { 
             position: fixed; bottom: 30px; left: 16px; right: 16px; 
             display: flex; gap: 12px; z-index: 1000;
         }
-        .timer-btn { 
-            flex: 1; padding: 22px; border-radius: 20px; border: none; 
-            font-weight: 800; color: black; font-size: 15px; text-transform: uppercase;
-        }
-        #rest-btn { background: var(--blue); color: white; box-shadow: 0 5px 20px rgba(59, 130, 246, 0.3); }
-        #plank-btn { background: var(--accent); box-shadow: 0 5px 20px rgba(34, 197, 94, 0.3); }
+        .timer-btn { flex: 1; padding: 22px; border-radius: 20px; border: none; font-weight: 800; font-size: 15px; text-transform: uppercase; }
+        #rest-btn { background: var(--blue); color: white; }
+        #plank-btn { background: var(--accent); color: black; }
         .t-active { animation: pulse 1s infinite; background: #ef4444 !important; color: white; }
         
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
@@ -122,7 +104,7 @@
     <div class="app-logo"></div>
     <div class="app-title">
         <h1>GYM ELITE</h1>
-        <p>Progress Tracker</p>
+        <p>Your Ultimate Progress</p>
     </div>
 </div>
 
@@ -131,23 +113,24 @@
 <div class="weight-card">
     <div class="category-title">Вес тела</div>
     <div class="ex-header">
-        <div id="display-weight" style="font-size: 24px; font-weight: 900;">-- кг</div>
-        <div class="weight-input-group" id="weight-input-area"></div>
+        <div id="display-weight" style="font-size: 26px; font-weight: 900;">-- кг</div>
+        <div id="weight-input-area"></div>
     </div>
 </div>
 
 <div id="exercise-list"></div>
 
 <div class="analytics-box">
-    <div class="category-title">Аналитика прогресса</div>
-    <div id="chart-current-date">Листай график</div>
-    <div id="chart-current-val">--</div>
+    <div class="category-title">Аналитика</div>
+    <div id="chart-current-date" style="font-size: 12px; color: var(--text-dim);">Статистика за месяц</div>
+    <div id="chart-current-val" style="font-size: 24px; font-weight: 900; margin-bottom: 10px;">--</div>
     
-    <div class="type-selector" style="margin-top: 15px;">
+    <div class="type-selector">
         <button class="type-btn active" id="btn-chart-pull" onclick="setChartSource('pull')">Турник</button>
         <button class="type-btn" id="btn-chart-dip" onclick="setChartSource('dip')">Брусья</button>
         <button class="type-btn" id="btn-chart-push" onclick="setChartSource('push')">Отжим</button>
         <button class="type-btn" id="btn-chart-abs" onclick="setChartSource('abs')">Пресс</button>
+        <button class="type-btn" id="btn-chart-weight" onclick="setChartSource('weight')">Вес</button>
     </div>
     
     <div class="chart-container">
@@ -168,8 +151,8 @@
         { id: 'abs', name: 'Пресс', types: ['Планка', 'Колесо', 'Подъем ног'] }
     ];
 
-    let db = JSON.parse(localStorage.getItem('gym_v20_db')) || {};
-    let selectedTypes = JSON.parse(localStorage.getItem('gym_v20_selected')) || { dip: 'Классика', pull: 'Широкий', push: 'Классика', abs: 'Планка' };
+    let db = JSON.parse(localStorage.getItem('gym_v21_db')) || {};
+    let selectedTypes = JSON.parse(localStorage.getItem('gym_v21_selected')) || { dip: 'Классика', pull: 'Широкий', push: 'Классика', abs: 'Планка' };
     let today = new Date().toISOString().split('T')[0];
     let viewingDate = today;
     let chartInstance, restId, plankId, rTime = 60, pTime = 0, currentChartSource = 'pull';
@@ -200,7 +183,7 @@
         if(!val) return;
         if(!db[today]) db[today] = {};
         db[today].weight = val;
-        localStorage.setItem('gym_v20_db', JSON.stringify(db));
+        localStorage.setItem('gym_v21_db', JSON.stringify(db));
         renderWeight(); updateChart();
     }
 
@@ -213,7 +196,7 @@
                 <div class="category-title">${ex.name}</div>
                 <div class="type-selector">${ex.types.map(t => `<button class="type-btn ${t === type ? 'active' : ''}" onclick="setType('${ex.id}', '${t}')">${t}</button>`).join('')}</div>
                 <div class="ex-header">
-                    <div class="ex-name">${type}</div>
+                    <div style="font-size:18px; font-weight:800;">${type}</div>
                     ${viewingDate === today ? `<div><input type="number" id="in-${ex.id}" placeholder="0"><button class="add-btn" style="margin-left:8px" onclick="addSet('${ex.id}')">+</button></div>` : ''}
                 </div>
                 <div class="history-pills">${sets.map(s => `<div class="pill">${s}${type==='Планка'?'с':''}</div>`).join('')}</div>
@@ -222,7 +205,7 @@
     }
 
     function changeDate(key) { viewingDate = key; renderCalendar(); renderWeight(); renderExercises(); updateChart(); }
-    function setType(id, t) { selectedTypes[id] = t; localStorage.setItem('gym_v20_selected', JSON.stringify(selectedTypes)); renderExercises(); updateChart(); }
+    function setType(id, t) { selectedTypes[id] = t; localStorage.setItem('gym_v21_selected', JSON.stringify(selectedTypes)); renderExercises(); updateChart(); }
 
     function addSet(id, manual = null) {
         const val = manual || parseInt(document.getElementById(`in-${id}`).value);
@@ -231,18 +214,23 @@
         if(!db[today]) db[today] = {};
         if(!db[today][key]) db[today][key] = [];
         db[today][key].push(val);
-        localStorage.setItem('gym_v20_db', JSON.stringify(db));
+        localStorage.setItem('gym_v21_db', JSON.stringify(db));
         if(!manual) document.getElementById(`in-${id}`).value = '';
         renderExercises(); updateChart();
     }
 
-    function setChartSource(src) { currentChartSource = src; document.querySelectorAll('.analytics-box .type-btn').forEach(b => b.classList.toggle('active', b.id === `btn-chart-${src}`)); updateChart(); }
+    function setChartSource(src) { 
+        currentChartSource = src; 
+        document.querySelectorAll('.analytics-box .type-btn').forEach(b => b.classList.toggle('active', b.id === `btn-chart-${src}`)); 
+        updateChart(); 
+    }
 
     function updateChart() {
         const ctx = document.getElementById('mainChart').getContext('2d');
         const labels = [];
         for(let i=29; i>=0; i--) { let d=new Date(); d.setDate(d.getDate()-i); labels.push(d.toISOString().split('T')[0]); }
         const data = labels.map(d => {
+            if(currentChartSource === 'weight') return db[d]?.weight || null;
             const key = `${currentChartSource}_${selectedTypes[currentChartSource]}`;
             return (db[d] && db[d][key]) ? Math.max(...db[d][key]) : null;
         });
@@ -263,7 +251,7 @@
                         const idx = elements[0].index;
                         const val = data[idx];
                         document.getElementById('chart-current-date').innerText = new Date(labels[idx]).toLocaleDateString('ru-RU', {day:'numeric', month:'long'});
-                        document.getElementById('chart-current-val').innerText = val ? `${val} (рекорд)` : 'Нет данных';
+                        document.getElementById('chart-current-val').innerText = val ? `${val} ${currentChartSource==='weight'?'кг':'(рекорд)'}` : 'Нет данных';
                     }
                 }
             }
