@@ -3,20 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Gym Pro: Full Access</title>
+    <title>Gym Pro: Focus & Progress</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --bg: #05070a; --card: #111827; --accent: #3b82f6; --success: #10b981; --text-dim: #6b7280; --error: #ef4444; }
         body { background: var(--bg); color: white; font-family: -apple-system, sans-serif; margin: 0; padding: 20px 20px 180px; }
         
-        /* Календарь */
         .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 20px; background: var(--card); padding: 15px; border-radius: 20px; }
         .day { text-align: center; cursor: pointer; opacity: 0.4; transition: 0.3s; }
         .day.active { opacity: 1; }
         .day-box { height: 35px; border-radius: 10px; background: #1f2937; display: flex; align-items: center; justify-content: center; font-size: 13px; margin-top: 5px; font-weight: bold; }
         .day.active .day-box { background: var(--accent); box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
 
-        /* Карточки упражнений */
         .ex-card { background: var(--card); border-radius: 24px; padding: 18px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); position: relative; }
         .category-title { color: var(--accent); font-size: 10px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; }
         
@@ -31,14 +29,17 @@
         .history-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; min-height: 20px; }
         .pill { background: rgba(59, 130, 246, 0.1); color: var(--accent); padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; border: 1px solid rgba(59, 130, 246, 0.2); }
 
-        /* Аналитика */
         .analytics-box { background: var(--card); border-radius: 24px; padding: 20px; margin-top: 25px; border: 1px solid rgba(255,255,255,0.1); }
+        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .scale-selector { display: flex; background: #1f2937; border-radius: 10px; padding: 2px; }
+        .scale-btn { background: none; border: none; color: var(--text-dim); font-size: 9px; padding: 5px 10px; border-radius: 8px; font-weight: bold; }
+        .scale-btn.active { background: var(--accent); color: white; }
+
         .chart-menu { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 15px; scrollbar-width: none; }
         .menu-btn { background: #1f2937; border: none; color: var(--text-dim); padding: 8px 14px; border-radius: 10px; font-size: 11px; font-weight: 700; white-space: nowrap; }
         .menu-btn.active { background: var(--accent); color: white; }
         .chart-container { height: 200px; position: relative; }
 
-        /* Кнопки таймеров */
         .controls-row { position: fixed; bottom: 20px; left: 20px; right: 20px; display: flex; gap: 10px; z-index: 1000; }
         .timer-btn { flex: 1; padding: 18px; border-radius: 20px; border: none; font-weight: 800; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-size: 14px; }
         #rest-btn { background: var(--accent); }
@@ -54,7 +55,13 @@
 <div id="exercise-list"></div>
 
 <div class="analytics-box">
-    <div style="font-size: 12px; color: var(--accent); font-weight: bold; margin-bottom: 10px;">ПРОГРЕСС ЗА 30 ДНЕЙ</div>
+    <div class="chart-header">
+        <div style="font-size: 11px; color: var(--accent); font-weight: bold;">АНАЛИТИКА ПРОГРЕССА</div>
+        <div class="scale-selector">
+            <button class="scale-btn active" id="s-30" onclick="setChartScale(30)">МЕСЯЦ</button>
+            <button class="scale-btn" id="s-180" onclick="setChartScale(180)">ПОЛГОДА</button>
+        </div>
+    </div>
     <div class="chart-menu">
         <button class="menu-btn active" id="btn-chart-pull" onclick="setChartSource('pull')">Турник</button>
         <button class="menu-btn" id="btn-chart-dip" onclick="setChartSource('dip')">Брусья</button>
@@ -79,12 +86,13 @@
         { id: 'abs', name: 'Пресс', types: ['Планка', 'Колесо', 'Подъем ног'] }
     ];
 
-    // Используем v14 для чистого старта
-    let db = JSON.parse(localStorage.getItem('gym_v14_db')) || {};
-    let selectedTypes = JSON.parse(localStorage.getItem('gym_v14_selected')) || { dip: 'Классика', pull: 'Широкий', push: 'Классика', abs: 'Планка' };
+    let db = JSON.parse(localStorage.getItem('gym_v15_db')) || {};
+    let selectedTypes = JSON.parse(localStorage.getItem('gym_v15_selected')) || { dip: 'Классика', pull: 'Широкий', push: 'Классика', abs: 'Планка' };
     let today = new Date().toISOString().split('T')[0];
     let viewingDate = today;
-    let chartInstance, restId, plankId, rTime = 60, pTime = 0, currentChartSource = 'pull';
+    let chartInstance, restId, plankId, rTime = 60, pTime = 0;
+    let currentChartSource = 'pull';
+    let currentChartScale = 30;
 
     function init() {
         renderCalendar();
@@ -109,125 +117,90 @@
             const currentType = selectedTypes[ex.id];
             const key = `${ex.id}_${currentType}`;
             const sets = (db[viewingDate] && db[viewingDate][key]) || [];
+            const isToday = viewingDate === today;
             
             return `<div class="ex-card">
                 <div class="category-title">${ex.name}</div>
                 <div class="type-selector">${ex.types.map(t => `<button class="type-btn ${t === currentType ? 'active' : ''}" onclick="setType('${ex.id}', '${t}')">${t}</button>`).join('')}</div>
                 <div class="ex-header">
                     <div style="font-size:16px; font-weight:bold;">${currentType}</div>
-                    <div class="input-group">
-                        <input type="number" id="in-${ex.id}" placeholder="0" inputmode="numeric">
-                        <button class="add-btn" onclick="addSet('${ex.id}')">+</button>
-                    </div>
+                    ${isToday ? `<div class="input-group"><input type="number" id="in-${ex.id}" placeholder="0" inputmode="numeric"><button class="add-btn" onclick="addSet('${ex.id}')">+</button></div>` : ''}
                 </div>
                 <div class="history-pills">${sets.map(s => `<div class="pill">${s}${currentType==='Планка'?'с':''}</div>`).join('')}</div>
             </div>`;
         }).join('');
     }
 
-    function changeDate(key) { 
-        viewingDate = key; 
-        renderCalendar(); 
-        renderExercises(); 
-        updateChart(); 
-    }
-
-    function setType(exId, type) { 
-        selectedTypes[exId] = type; 
-        localStorage.setItem('gym_v14_selected', JSON.stringify(selectedTypes)); 
-        renderExercises(); 
-        updateChart(); 
-    }
+    function changeDate(key) { viewingDate = key; renderCalendar(); renderExercises(); updateChart(); }
+    function setType(exId, type) { selectedTypes[exId] = type; localStorage.setItem('gym_v15_selected', JSON.stringify(selectedTypes)); renderExercises(); updateChart(); }
 
     function addSet(exId, manualVal = null) {
         const val = manualVal || parseInt(document.getElementById(`in-${exId}`).value);
         if(!val) return;
         const key = `${exId}_${selectedTypes[exId]}`;
-        
-        if(!db[viewingDate]) db[viewingDate] = {};
-        if(!db[viewingDate][key]) db[viewingDate][key] = [];
-        db[viewingDate][key].push(val);
-        
-        localStorage.setItem('gym_v14_db', JSON.stringify(db));
+        if(!db[today]) db[today] = {};
+        if(!db[today][key]) db[today][key] = [];
+        db[today][key].push(val);
+        localStorage.setItem('gym_v15_db', JSON.stringify(db));
         if(!manualVal) document.getElementById(`in-${exId}`).value = '';
-        renderExercises(); 
+        renderExercises(); updateChart();
+    }
+
+    function setChartScale(days) {
+        currentChartScale = days;
+        document.getElementById('s-30').classList.toggle('active', days === 30);
+        document.getElementById('s-180').classList.toggle('active', days === 180);
         updateChart();
     }
 
-    function setChartSource(src) { 
-        currentChartSource = src; 
-        document.querySelectorAll('.menu-btn').forEach(b => b.classList.toggle('active', b.id === `btn-chart-${src}`)); 
-        updateChart(); 
-    }
+    function setChartSource(src) { currentChartSource = src; document.querySelectorAll('.menu-btn').forEach(b => b.classList.toggle('active', b.id === `btn-chart-${src}`)); updateChart(); }
 
     function updateChart() {
         const ctx = document.getElementById('mainChart').getContext('2d');
-        const last30 = [];
-        for(let i=29; i>=0; i--) { 
-            let d=new Date(); d.setDate(d.getDate()-i); 
-            last30.push(d.toISOString().split('T')[0]); 
-        }
+        const labels = [];
+        const dataSet = [];
         
-        let data = last30.map(date => {
-            const key = `${currentChartSource}_${selectedTypes[currentChartSource]}`;
-            const dayData = (db[date] && db[date][key]) || [];
-            return dayData.length > 0 ? Math.max(...dayData) : null;
-        });
+        for(let i = currentChartScale - 1; i >= 0; i--) {
+            let d = new Date(); d.setDate(d.getDate() - i);
+            let key = d.toISOString().split('T')[0];
+            labels.push(d.getDate());
+            
+            const storageKey = `${currentChartSource}_${selectedTypes[currentChartSource]}`;
+            const dayData = (db[key] && db[key][storageKey]) || [];
+            dataSet.push(dayData.length > 0 ? Math.max(...dayData) : null);
+        }
 
         if (chartInstance) chartInstance.destroy();
         chartInstance = new Chart(ctx, {
             type: 'line',
-            data: { 
-                labels: last30.map(d=>d.split('-')[2]), 
-                datasets: [{ 
-                    data: data, 
-                    borderColor: '#3b82f6', 
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)', 
-                    fill: true, 
-                    tension: 0.3, 
-                    spanGaps: true, 
-                    pointRadius: (c) => c.raw ? 3 : 0 
-                }] 
-            },
+            data: { labels: labels, datasets: [{ data: dataSet, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true, tension: 0.3, spanGaps: true, pointRadius: (c) => c.raw ? 2 : 0 }] },
             options: { 
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } }, 
                 scales: { 
                     y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#6b7280', font: {size: 10} }, beginAtZero: true }, 
-                    x: { grid: { display: false }, ticks: { color: '#6b7280', font: {size: 9}, autoSkip: true, callback: (v, i) => i % 5 === 0 ? last30[i].split('-')[2] : '' } } 
+                    x: { grid: { display: false }, ticks: { color: '#6b7280', font: {size: 8}, autoSkip: true, maxTicksLimit: 10 } } 
                 } 
             }
         });
     }
 
     function toggleRest() {
+        if(viewingDate !== today) return;
         clearInterval(restId); const btn = document.getElementById('rest-btn');
-        if(btn.classList.contains('t-active')) { 
-            btn.classList.remove('t-active'); rTime = 60; document.getElementById('r-val').innerText = 60; 
-        } else { 
-            btn.classList.add('t-active'); 
-            restId = setInterval(() => { 
-                rTime--; document.getElementById('r-val').innerText = rTime; 
-                if(rTime <= 0) { toggleRest(); alert('Пора делать подход!'); } 
-            }, 1000); 
-        }
+        if(btn.classList.contains('t-active')) { btn.classList.remove('t-active'); rTime = 60; document.getElementById('r-val').innerText = 60; }
+        else { btn.classList.add('t-active'); restId = setInterval(() => { rTime--; document.getElementById('r-val').innerText = rTime; if(rTime <= 0) toggleRest(); }, 1000); }
     }
 
     function togglePlank() {
+        if(viewingDate !== today) return;
         const btn = document.getElementById('plank-btn');
         if(btn.classList.contains('t-active')) {
             clearInterval(plankId); btn.classList.remove('t-active');
-            if(pTime > 0) { 
-                // Сохраняем результат планки именно в выбранный день
-                const oldType = selectedTypes.abs;
-                selectedTypes.abs = 'Планка'; 
-                addSet('abs', pTime);
-                selectedTypes.abs = oldType; // Возвращаем выбор обратно
-            }
+            if(pTime > 0) { selectedTypes.abs = 'Планка'; addSet('abs', pTime); }
             pTime = 0; document.getElementById('p-val').innerText = 0;
         } else {
-            btn.classList.add('t-active'); 
-            plankId = setInterval(() => { pTime++; document.getElementById('p-val').innerText = pTime; }, 1000);
+            btn.classList.add('t-active'); plankId = setInterval(() => { pTime++; document.getElementById('p-val').innerText = pTime; }, 1000);
         }
     }
 
