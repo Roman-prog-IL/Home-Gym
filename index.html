@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Home Gym Classic</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
         :root { 
             --bg: #0f0f10; --card: #1c1c1e; --accent: #32d74b; 
@@ -86,9 +87,7 @@
     </div>
 </div>
 
-<div class="motivation-box" id="quote">
-    «Твой единственный соперник — это ты вчерашний.»
-</div>
+<div class="motivation-box" id="quote">«Твой единственный соперник — это ты вчерашний.»</div>
 
 <div class="weight-card">
     <div class="weight-title">Вес Тела</div>
@@ -105,9 +104,9 @@
 <div id="exercise-list"></div>
 
 <div class="analytics-box">
-    <div class="weight-title">Аналитика</div>
+    <div class="weight-title">Аналитика (сумма за день)</div>
     <div class="chart-nav" id="chart-nav"></div>
-    <div style="height:180px;">
+    <div style="height:200px; padding-top: 10px;">
         <canvas id="mainChart"></canvas>
     </div>
 </div>
@@ -139,13 +138,13 @@
     let chartInstance, currentChartId = 'pull', restTime = 60, restId, pTime = 0, plankId;
 
     const quotes = {
-        0: "Воскресенье — новая неделя, новый заряд! Погнали на турники! 🚀",
-        1: "Понедельник — мышцы растут, пока ты отдыхаешь. Набирайся сил.",
-        2: "Вторник — время силовой! Сделай на один подход больше, чем в прошлый раз! 🔥",
-        3: "Среда — экватор недели. Отдыхай качественно.",
-        4: "Четверг — последняя силовая на неделе. Выложись на полную! 💪",
-        5: "Пятница — день кардио! Продышись как следует, выносливость решает. 🏃‍♂️",
-        6: "Шаббат Шалом! Время заслуженного отдыха. Восстанавливайся. 🕯️"
+        0: "Воскресенье — новая неделя! Погнали! 🚀",
+        1: "Понедельник — мышцы растут, пока ты спишь.",
+        2: "Вторник — сделай на один подход больше! 🔥",
+        3: "Среда — экватор. Держи темп.",
+        4: "Четверг — время выложиться на полную! 💪",
+        5: "Пятница — день выносливости. 🏃‍♂️",
+        6: "Шаббат Шалом! Восстанавливайся. 🕯️"
     };
 
     function init() {
@@ -194,7 +193,7 @@
 
     function renderChartNav() {
         const nav = document.getElementById('chart-nav');
-        const items = [...exercises, { id: 'weight', name: 'Вес тела' }];
+        const items = [...exercises, { id: 'weight', name: 'Вес' }];
         nav.innerHTML = items.map(ex => `<button class="nav-btn ${ex.id === currentChartId ? 'active' : ''}" onclick="switchChart('${ex.id}', this)">${ex.name}</button>`).join('');
     }
 
@@ -209,7 +208,7 @@
     }
 
     function removeSet(exId, index) {
-        if(confirm('Удалить этот подход?')) {
+        if(confirm('Удалить?')) {
             db[viewingDate][exId].splice(index, 1);
             saveDB(); renderExercises(); updateChart();
         }
@@ -247,18 +246,17 @@
             if(currentChartId === 'weight') {
                 val = db[k]?.weight || 0;
             } else {
-                // ИСПРАВЛЕНО: Теперь суммируем все подходы за день вместо поиска максимума
                 const sets = db[k] && db[k][currentChartId];
-                if (sets && sets.length > 0) {
-                    val = sets.reduce((sum, current) => sum + current, 0);
-                } else {
-                    val = 0;
-                }
+                val = (sets && sets.length > 0) ? sets.reduce((a, b) => a + b, 0) : 0;
             }
             data.push(val);
         }
         
         if (chartInstance) chartInstance.destroy();
+
+        // Регистрируем плагин для отображения чисел
+        Chart.register(ChartDataLabels);
+
         chartInstance = new Chart(ctx, {
             type: 'line',
             data: { 
@@ -266,20 +264,38 @@
                 datasets: [{ 
                     data, 
                     borderColor: '#32d74b', 
-                    tension: 0.4, 
+                    tension: 0.3, 
                     fill: true, 
-                    backgroundColor: 'rgba(50, 215, 75, 0.1)', 
-                    borderWidth: 3 
+                    backgroundColor: 'rgba(50, 215, 75, 0.15)', 
+                    borderWidth: 3,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#32d74b'
                 }] 
             },
             options: { 
-                maintainAspectRatio: false, 
-                plugins: { legend: { display: false } }, 
+                maintainAspectRatio: false,
+                layout: { padding: { top: 20 } },
+                plugins: { 
+                    legend: { display: false },
+                    // Настройка подписей над точками
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        color: '#32d74b',
+                        font: { weight: 'bold', size: 12 },
+                        formatter: (value) => value > 0 ? value : '' // не пишем 0
+                    }
+                },
                 scales: { 
                     y: { 
                         beginAtZero: true, 
-                        grid: { color: '#2c2c2e' } 
-                    } 
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: '#8e8e93', font: { size: 10 } }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#8e8e93', font: { size: 10 } }
+                    }
                 } 
             }
         });
