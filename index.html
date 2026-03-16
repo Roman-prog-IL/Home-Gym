@@ -24,7 +24,6 @@
             border: 1px solid rgba(255,255,255,0.1);
         }
 
-        /* Мотивирующее окошко */
         .motivation-box {
             background: linear-gradient(135deg, rgba(50, 215, 75, 0.15), rgba(10, 132, 255, 0.15));
             border: 1px solid rgba(255,255,255,0.1);
@@ -243,16 +242,46 @@
             let d = new Date(); d.setDate(d.getDate() - i);
             let k = d.toISOString().split('T')[0];
             labels.push(d.getDate());
+            
             let val = 0;
-            if(currentChartId === 'weight') val = db[k]?.weight || 0;
-            else val = db[k] && db[k][currentChartId] && db[k][currentChartId].length > 0 ? Math.max(...db[k][currentChartId]) : 0;
+            if(currentChartId === 'weight') {
+                val = db[k]?.weight || 0;
+            } else {
+                // ИСПРАВЛЕНО: Теперь суммируем все подходы за день вместо поиска максимума
+                const sets = db[k] && db[k][currentChartId];
+                if (sets && sets.length > 0) {
+                    val = sets.reduce((sum, current) => sum + current, 0);
+                } else {
+                    val = 0;
+                }
+            }
             data.push(val);
         }
+        
         if (chartInstance) chartInstance.destroy();
         chartInstance = new Chart(ctx, {
             type: 'line',
-            data: { labels, datasets: [{ data, borderColor: '#32d74b', tension: 0.4, fill: true, backgroundColor: 'rgba(50, 215, 75, 0.1)', borderWidth: 3 }] },
-            options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: false, grid: { color: '#2c2c2e' } } } }
+            data: { 
+                labels, 
+                datasets: [{ 
+                    data, 
+                    borderColor: '#32d74b', 
+                    tension: 0.4, 
+                    fill: true, 
+                    backgroundColor: 'rgba(50, 215, 75, 0.1)', 
+                    borderWidth: 3 
+                }] 
+            },
+            options: { 
+                maintainAspectRatio: false, 
+                plugins: { legend: { display: false } }, 
+                scales: { 
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: '#2c2c2e' } 
+                    } 
+                } 
+            }
         });
     }
 
